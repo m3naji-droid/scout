@@ -86,7 +86,6 @@ export const TeacherDashboard: React.FC = () => {
     : ['الأول إعدادي - 1', 'الأول إعدادي - 2', 'الثاني إعدادي - 1', 'الثالث إعدادي - 1'];
 
   useEffect(() => {
-    // Restore preferred class from localStorage
     const saved = localStorage.getItem('ahmed_alfateh_teacher_last_class');
     if (saved && assignedClasses.includes(saved)) {
       setSelectedClass(saved);
@@ -105,9 +104,9 @@ export const TeacherDashboard: React.FC = () => {
     try {
       setLoading(true);
       const allScouts = await api.getScouts();
-      setScouts(allScouts);
+      setScouts(allScouts || []);
       const evals = await api.getEvaluations();
-      setRecentEvaluations(evals.slice(0, 10));
+      setRecentEvaluations((evals || []).slice(0, 10));
     } catch (err) {
       console.error('Failed loading teacher data:', err);
     } finally {
@@ -115,10 +114,10 @@ export const TeacherDashboard: React.FC = () => {
     }
   };
 
-  // Filter scouts by selected class & search
-  const filteredScouts = scouts.filter(s => {
-    const classMatches = `${s.grade} - ${s.section}` === selectedClass || selectedClass.includes(s.grade);
-    const searchMatches = s.fullName.includes(searchTerm) || s.nationalId.includes(searchTerm);
+  // Filter scouts by selected class & search safely
+  const filteredScouts = (scouts || []).filter(s => {
+    const classMatches = `${s.grade || ''} - ${s.section || ''}` === selectedClass || selectedClass.includes(s.grade || '');
+    const searchMatches = (s.fullName || '').includes(searchTerm) || (s.nationalId || '').includes(searchTerm);
     return classMatches && searchMatches;
   });
 
@@ -166,7 +165,7 @@ export const TeacherDashboard: React.FC = () => {
           notes,
           encouragementMessage
         },
-        { id: user.id, name: user.fullName, role: user.role }
+        { id: user.id, name: user.fullName || 'معلم', role: user.role }
       );
       setActionSuccess(`تم تسجيل +${points} نقطة بنجاح للكشاف ${selectedScout.fullName}`);
       loadData();
@@ -189,7 +188,7 @@ export const TeacherDashboard: React.FC = () => {
           notes,
           encouragementMessage
         },
-        { id: user.id, name: user.fullName, role: user.role }
+        { id: user.id, name: user.fullName || 'معلم', role: user.role }
       );
       setActionSuccess(`تم تسجيل طلب خصم -${points} نقاط وتنتظر اعتماد القائد.`);
       loadData();
@@ -212,7 +211,7 @@ export const TeacherDashboard: React.FC = () => {
           targetActivities,
           requestedDuration: suspensionDuration
         },
-        { id: user.id, name: user.fullName, role: user.role }
+        { id: user.id, name: user.fullName || 'معلم', role: user.role }
       );
       setActionSuccess(`تم رفع طلب الحرمان للكشاف ${selectedScout.fullName} إلى القائد لمراجعته.`);
       loadData();
@@ -235,7 +234,7 @@ export const TeacherDashboard: React.FC = () => {
           targetClass: selectedClass,
           scoutId: selectedScout?.id
         },
-        { id: user.id, name: user.fullName, role: user.role }
+        { id: user.id, name: user.fullName || 'معلم', role: user.role }
       );
       setActionSuccess('تم إرسال البلاغ لقيادة الفرقة بنجاح.');
       setReportTitle('');
@@ -256,7 +255,7 @@ export const TeacherDashboard: React.FC = () => {
             <span>بوابة المعلم لرصد السلوك والتقييم اليومي</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">
-            مرحباً بك، {user?.fullName}
+            مرحباً بك، {user?.fullName || 'المعلم'}
           </h1>
           <p className="text-xs sm:text-sm text-blue-200">
             مدرسة أحمد الفاتح الإعدادية للبنين • تقييم سريع وسلس أثناء اليوم الدراسي
@@ -282,7 +281,6 @@ export const TeacherDashboard: React.FC = () => {
       {/* Class Selection & Search Toolbar */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          {/* Class Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
             <span className="text-xs font-bold text-slate-500 shrink-0 ml-1">الصفوف المصرح بها:</span>
             {assignedClasses.map(cls => (
@@ -300,7 +298,6 @@ export const TeacherDashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* Search Bar */}
           <div className="relative w-full sm:w-72">
             <input
               type="text"
@@ -343,14 +340,13 @@ export const TeacherDashboard: React.FC = () => {
                 key={scout.id} 
                 className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs hover:border-blue-300 transition-all flex flex-col justify-between space-y-4"
               >
-                {/* Scout Info Header */}
                 <div className="flex items-start gap-3.5">
                   <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 p-0.5 overflow-hidden shrink-0 flex items-center justify-center">
                     {scout.avatarStatus === 'APPROVED' && scout.avatarUrl ? (
                       <img src={scout.avatarUrl} alt={scout.fullName} className="w-full h-full object-cover rounded-xl" />
                     ) : (
                       <div className="text-emerald-800 font-bold text-lg">
-                        {scout.fullName.charAt(0)}
+                        {scout.fullName ? scout.fullName.charAt(0) : 'ك'}
                       </div>
                     )}
                   </div>
@@ -373,16 +369,15 @@ export const TeacherDashboard: React.FC = () => {
 
                     <div className="flex items-center gap-2 mt-2">
                       <div className="bg-emerald-50 text-emerald-900 font-black text-xs px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                        {scout.netBalance} نقطة
+                        {scout.netBalance || 0} نقطة
                       </div>
                       <div className="bg-amber-50 text-amber-900 font-semibold text-[10px] px-2 py-0.5 rounded-lg border border-amber-200">
-                        {scout.badgeCount} شارات
+                        {scout.badgeCount || 0} شارات
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Fast Action Buttons */}
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                   <button
                     onClick={() => openPositiveModal(scout)}
@@ -401,7 +396,6 @@ export const TeacherDashboard: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Suspension Request Shortcut */}
                 <button
                   onClick={() => openSuspensionModal(scout)}
                   className="w-full py-1.5 text-center text-[10px] font-bold text-amber-800 hover:text-amber-900 hover:underline flex items-center justify-center gap-1"
@@ -733,24 +727,24 @@ export const TeacherDashboard: React.FC = () => {
 
             <form onSubmit={handleReportSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">عنوان البلاغ</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">عنوان البلاغ أو الملاحظة</label>
                 <input
                   type="text"
                   value={reportTitle}
                   onChange={e => setReportTitle(e.target.value)}
                   required
-                  placeholder="مثال: ملاحظة حول التزام طليعة الفاتح في الطابور"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="مثال: ملاحظة حول سلوك الطليعة أثناء الطابور..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">تصنيف البلاغ</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">التصنيف</label>
                   <select
                     value={reportCategory}
                     onChange={e => setReportCategory(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-700"
                   >
                     <option value="سلوكي">سلوكي</option>
                     <option value="انضباطي">انضباطي</option>
@@ -761,11 +755,11 @@ export const TeacherDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">درجة الأهمية</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">الأهمية</label>
                   <select
                     value={reportSeverity}
                     onChange={e => setReportSeverity(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-700"
                   >
                     <option value="عادي">عادي</option>
                     <option value="متوسط">متوسط</option>
@@ -775,14 +769,14 @@ export const TeacherDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">نص البلاغ والتفاصيل</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">تفاصيل البلاغ</label>
                 <textarea
                   value={reportDesc}
                   onChange={e => setReportDesc(e.target.value)}
-                  rows={4}
+                  rows={3}
                   required
-                  placeholder="اكتب تفاصيل البلاغ أو التوجيه المطلوب من القائد..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="اكتب تفاصيل البلاغ ليطلع عليه قائد الفرقة..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700"
                 ></textarea>
               </div>
 
