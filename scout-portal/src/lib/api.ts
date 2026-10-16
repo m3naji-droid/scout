@@ -79,7 +79,7 @@ export const api = {
     }
   },
 
-  // Scouts
+  // Scouts & Users Management (للقائد)
   getScouts: async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
@@ -100,19 +100,16 @@ export const api = {
       const docSnap = await getDoc(docRef);
       const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
       
-      // Fetch evaluations for this scout
       const evalsQuery = query(collection(db, 'evaluations'), where('scoutId', '==', id));
       const evalsSnap = await getDocs(evalsQuery);
       const evaluations: PointEvaluation[] = [];
       evalsSnap.forEach(d => evaluations.push({ id: d.id, ...d.data() } as PointEvaluation));
 
-      // Fetch badges for this scout
       const badgesQuery = query(collection(db, 'awardedBadges'), where('scoutId', '==', id));
       const badgesSnap = await getDocs(badgesQuery);
       const badges: AwardedBadge[] = [];
       badgesSnap.forEach(d => badges.push({ id: d.id, ...d.data() } as AwardedBadge));
 
-      // Fetch certificates
       const certsQuery = query(collection(db, 'certificates'), where('scoutId', '==', id));
       const certsSnap = await getDocs(certsQuery);
       const certificates: Certificate[] = [];
@@ -125,15 +122,90 @@ export const api = {
     }
   },
 
-  addScout: async (scoutData: any) => {
-    const docRef = await addDoc(collection(db, 'scouts'), scoutData);
-    return { id: docRef.id, ...scoutData };
+  // إضافة كشاف جديد مع حساب مستخدم خاص به
+  addScout: async (scoutData: any, actor: any) => {
+    try {
+      const scoutRef = await addDoc(collection(db, 'scouts'), {
+        ...scoutData,
+        totalPositivePoints: 0,
+        totalDeductions: 0,
+        netBalance: 0,
+        badgeCount: 0,
+        activitiesAttendedCount: 0,
+        status: 'ACTIVE',
+        avatarStatus: 'APPROVED',
+        createdAt: new Date().toISOString()
+      });
+
+      // إنشاء حساب دخول للكشاف تلقائياً باستخدام الرقم الشخصي
+      await addDoc(collection(db, 'users'), {
+        username: scoutData.nationalId || scoutData.username,
+        fullName: scoutData.fullName,
+        role: 'SCOUT',
+        scoutId: scoutRef.id,
+        password: scoutData.password || 'password123',
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+
+      return { id: scoutRef.id, success: true };
+    } catch (err: any) {
+      throw new Error('فشل إضافة الكشاف: ' + err.message);
+    }
   },
 
   updateScout: async (id: string, updates: any) => {
     const docRef = doc(db, 'scouts', id);
     await updateDoc(docRef, updates);
     return { success: true };
+  },
+
+  // إضافة ولي أمر وربطه بالكشاف المحدد (عبر معرف الكشاف scoutId)
+  addParentAccount: async (parentData: { fullName: string, username: string, password: string, linkedScoutId: string }) => {
+    try {
+      await addDoc(collection(db, 'users'), {
+        username: parentData.username,
+        fullName: parentData.fullName,
+        role: 'PARENT',
+        password: parentData.password,
+        linkedScoutIds: [parentData.linkedScoutId], // ربط ولي الأمر برقم معرف الكشاف بدقة
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+      return { success: true, message: 'تم إضافة وربط ولي الأمر بالكشاف بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل إضافة ولي الأمر: ' + err.message);
+    }
+  },
+
+  // إضافة معلم أو إداري جديد بواسطة القائد
+  addUserAccount: async (userData: { fullName: string, username: string, password: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[] }) => {
+    try {
+      const userRef = await addDoc(collection(db, 'users'), {
+        username: userData.username,
+        fullName: userData.fullName,
+        role: userData.role,
+        password: userData.password,
+        assignedClasses: userData.assignedClasses || [],
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+
+      // إذا كان معلماً، يتم حفظه أيضاً في جدول المعلمين
+      if (userData.role === 'TEACHER') {
+        await addDoc(collection(db, 'teachers'), {
+          userId: userRef.id,
+          fullName: userData.fullName,
+          assignedClasses: userData.assignedClasses || [],
+          evaluationsGivenCount: 0,
+          status: 'ACTIVE'
+        });
+      }
+
+      return { success: true, message: 'تم إضافة الحساب بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل إضافة الحساب: ' + err.message);
+    }
   },
 
   uploadScoutAvatar: async (scoutId: string, avatarDataUrl: string) => {
