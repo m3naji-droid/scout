@@ -7,7 +7,7 @@ import { db } from '../firebase';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, addDoc, query, where, deleteDoc } from 'firebase/firestore';
 
 export const api = {
-  // Public Info
+  // Public Info & Stats
   getPublicInfo: async () => {
     try {
       const scoutsSnap = await getDocs(collection(db, 'scouts'));
@@ -24,7 +24,7 @@ export const api = {
       return {
         troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
         schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
-        season: '2025-2026',
+        season: '2026-2027',
         announcements,
         upcomingActivities: activities,
         stats: { 
@@ -38,7 +38,7 @@ export const api = {
       return {
         troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
         schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
-        season: '2025-2026',
+        season: '2026-2027',
         announcements: [],
         upcomingActivities: [],
         stats: { scoutsCount: 0, teachersCount: 0, activitiesCount: 0 }
@@ -53,7 +53,7 @@ export const api = {
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) throw new Error('المستخدم غير موجود');
       
-      await updateDoc(userRef, { password: newPassword });
+      await updateDoc(userRef, { passwordHash: newPassword });
       return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
     } catch (err: any) {
       throw new Error(err.message || 'فشل تغيير كلمة المرور');
@@ -70,16 +70,16 @@ export const api = {
       });
       scouts.sort((a, b) => (b.netBalance || 0) - (a.netBalance || 0));
       return {
-        periodName: 'منافسة درع الفاتح السنوية',
+        periodName: 'منافسة درع الفاتح السنوية 2026-2027',
         topScouts: scouts.slice(0, 3)
       };
     } catch (err) {
       console.error('Error fetching distinction:', err);
-      return { periodName: 'منافسة درع الفاتح السنوية', topScouts: [] };
+      return { periodName: 'منافسة درع الفاتح السنوية 2026-2027', topScouts: [] };
     }
   },
 
-  // Scouts & Users Management (للقائد)
+  // Scouts Management
   getScouts: async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
@@ -122,9 +122,13 @@ export const api = {
     }
   },
 
-  // إضافة كشاف جديد مع حساب مستخدم خاص به
+  // إضافة كشاف جديد (متاحة للقائد) مع توليد حساب دخول خاص به
   addScout: async (scoutData: any, actor: any) => {
     try {
+      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
+        throw new Error('غير مصرح لك بإضافة كشافين جدد');
+      }
+
       const scoutRef = await addDoc(collection(db, 'scouts'), {
         ...scoutData,
         totalPositivePoints: 0,
@@ -132,18 +136,19 @@ export const api = {
         netBalance: 0,
         badgeCount: 0,
         activitiesAttendedCount: 0,
+        registrationYear: '2026-2027',
         status: 'ACTIVE',
         avatarStatus: 'APPROVED',
-        createdAt: new Date().toISOString()
+        avatarUrl: scoutData.avatarUrl || ''
       });
 
-      // إنشاء حساب دخول للكشاف تلقائياً باستخدام الرقم الشخصي
+      // إنشاء حساب دخول للكشاف في مجموعة users تلقائياً باستخدام الرقم الشخصي
       await addDoc(collection(db, 'users'), {
-        username: scoutData.nationalId || scoutData.username,
+        username: scoutData.nationalId,
         fullName: scoutData.fullName,
         role: 'SCOUT',
+        nationalId: scoutData.nationalId,
         scoutId: scoutRef.id,
-        password: scoutData.password || 'password123',
         isActive: true,
         createdAt: new Date().toISOString()
       });
@@ -160,42 +165,53 @@ export const api = {
     return { success: true };
   },
 
-  // إضافة ولي أمر وربطه بالكشاف المحدد (عبر معرف الكشاف scoutId)
-  addParentAccount: async (parentData: { fullName: string, username: string, password: string, linkedScoutId: string }) => {
+  // إضافة ولي أمر وربطه بالكشاف بدقة عبر معرف الكشاف (scoutId)
+  addParentAccount: async (parentData: { fullName: string, username: string, passwordHash: string, linkedScoutId: string, phoneNumber?: string }, actor: any) => {
     try {
+      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
+        throw new Error('غير مصرح لك بإضافة حسابات أولياء الأمور');
+      }
+
       await addDoc(collection(db, 'users'), {
         username: parentData.username,
         fullName: parentData.fullName,
         role: 'PARENT',
-        password: parentData.password,
-        linkedScoutIds: [parentData.linkedScoutId], // ربط ولي الأمر برقم معرف الكشاف بدقة
+        phoneNumber: parentData.phoneNumber || '',
+        linkedScoutIds: [parentData.linkedScoutId], // ربط ولي الأمر برقم معرف الكشاف الصحيح
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        passwordHash: parentData.passwordHash
       });
-      return { success: true, message: 'تم إضافة وربط ولي الأمر بالكشاف بنجاح' };
+
+      return { success: true, message: 'تم ربط ولي الأمر بالكشاف بنجاح' };
     } catch (err: any) {
       throw new Error('فشل إضافة ولي الأمر: ' + err.message);
     }
   },
 
-  // إضافة معلم أو إداري جديد بواسطة القائد
-  addUserAccount: async (userData: { fullName: string, username: string, password: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[] }) => {
+  // إضافة معلم أو مستخدم جديد بواسطة القائد
+  addUserAccount: async (userData: { fullName: string, username: string, passwordHash: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[], employeeId?: string, subject?: string }, actor: any) => {
     try {
+      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
+        throw new Error('غير مصرح لك بإضافة حسابات مستخدمين');
+      }
+
       const userRef = await addDoc(collection(db, 'users'), {
         username: userData.username,
         fullName: userData.fullName,
         role: userData.role,
-        password: userData.password,
         assignedClasses: userData.assignedClasses || [],
         isActive: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        passwordHash: userData.passwordHash
       });
 
-      // إذا كان معلماً، يتم حفظه أيضاً في جدول المعلمين
       if (userData.role === 'TEACHER') {
         await addDoc(collection(db, 'teachers'), {
           userId: userRef.id,
           fullName: userData.fullName,
+          employeeId: userData.employeeId || 'EMP-NEW',
+          subject: userData.subject || 'عام',
           assignedClasses: userData.assignedClasses || [],
           evaluationsGivenCount: 0,
           status: 'ACTIVE'
@@ -248,7 +264,7 @@ export const api = {
     const payload = {
       ...evalData,
       evaluatorId: actor.id,
-      evaluatorName: actor.name,
+      evaluatorName: actor.fullName,
       evaluatorRole: actor.role,
       status: evalData.type === 'POSITIVE' ? 'APPROVED' : 'PENDING',
       createdAt: new Date().toISOString()
@@ -303,6 +319,7 @@ export const api = {
       parentName,
       scoutId,
       message,
+      status: 'APPROVED',
       createdAt: new Date().toISOString()
     });
     return { success: true };
@@ -321,11 +338,11 @@ export const api = {
   },
 
   // Incident Reports
-  submitIncidentReport: async (reportData: any, actor: any) => {
+  submitIncidentReport: async (reportData: data, actor: any) => {
     await addDoc(collection(db, 'incidentReports'), {
       ...reportData,
       senderId: actor.id,
-      senderName: actor.name,
+      senderName: actor.fullName,
       senderRole: actor.role,
       status: 'جديد',
       createdAt: new Date().toISOString()
