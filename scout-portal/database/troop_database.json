@@ -1,0 +1,712 @@
+{
+  "settings": {
+    "troopName": "فرقة فتيان أحمد الفاتح الكشفية",
+    "schoolName": "مدرسة أحمد الفاتح الإعدادية للبنين",
+    "kingdom": "مملكة البحرين",
+    "ministryName": "وزارة التربية والتعليم - كشافة البحرين",
+    "currentAcademicYear": "2026-2027",
+    "competitionPeriod": {
+      "name": "منافسة درع الفاتح السنوية 2026-2027",
+      "startDate": "2026-09-01",
+      "endDate": "2027-06-15",
+      "isActive": true
+    },
+    "pointsRules": {
+      "minPositive": 1,
+      "maxPositive": 5,
+      "requireLeaderApprovalForDeductions": true,
+      "requireLeaderApprovalForPositive": true,
+      "consecutiveViolationsForSuspension": 3
+    },
+    "contactInfo": {
+      "schoolPhone": "+973 1700 0000",
+      "troopEmail": "ahmedalfateh.scouts@moe.gov.bh",
+      "address": "مملكة البحرين - مدرسة أحمد الفاتح الإعدادية للبنين"
+    },
+    "privacyPolicyText": "تلتزم فرقة فتيان أحمد الفاتح الكشفية بحماية خصوصية بيانات الطلاب وسجلاتهم السلوكية وصورهم الشخصية. تطبق المنصة سياسات وزارة التربية والتعليم بمملكة البحرين، ولا يُسمح بنشر بيانات أو صور الطلبة للعامة دون موافقة رسمية من ولي الأمر وقيادة الفرقة."
+  },
+  "users": [
+    {
+      "id": "usr_admin",
+      "username": "المدير",
+      "fullName": "مدير مدرسة أحمد الفاتح الإعدادية",
+      "role": "ADMIN",
+      "isActive": true,
+      "createdAt": "2026-09-01T08:00:00Z",
+      "salt": "ba9e07896e879f01a9bbe97e4d86b7a4",
+      "passwordHash": "f4f615d332e9b8aabae89ed9ad0c1bb02fefb9b57188492a0ff7790ce67222a22a6e576131308c7ea71b5279c0931ed7c4b3337fd9e8aa3eee9ce357be42518b"
+    },
+    {
+      "id": "usr_basel",
+      "username": "باسل",
+      "fullName": "القائد باسل حسن",
+      "role": "LEADER",
+      "phoneNumber": "973-39001122",
+      "isActive": true,
+      "createdAt": "2026-09-01T08:00:00Z",
+      "salt": "132605cc10180e3756c9e3e5f242ac84",
+      "passwordHash": "c0acefe60f5fa2e877f29812bc05146be5f3fe70c65397dd709cfadd9f98ba8caf57bff480d7c43e7c2f554b54c2e8070d3a417fa57e6deb2f13f64a8f41225b"
+    },
+    {
+      "id": "usr_mohammed",
+      "username": "محمد",
+      "fullName": "القائد محمد علي",
+      "role": "LEADER",
+      "phoneNumber": "973-39003344",
+      "isActive": true,
+      "createdAt": "2026-09-01T08:00:00Z",
+      "salt": "6ade0fbb6372d7487e3deffc719cbd11",
+      "passwordHash": "cdccb205554a0d054ecb46f9637ba194eb7c54aea7da894e40d9f5831b76671b9d2f96bec20a6d20abc12db909e6deb3086ae7ff9993c55fbcdf4ee49dbfa83c"
+    },
+    {
+      "id": "usr_teacher_salman",
+      "username": "salman",
+      "fullName": "أ. سلمان راشد البنعلي",
+      "role": "TEACHER",
+      "isActive": true,
+      "assignedClasses": [
+        "الأول إعدادي - 1",
+        "الأول إعدادي - 2",
+        "الثاني إعدادي - 1"
+      ],
+      "createdAt": "2026-09-05T08:00:00Z",
+      "salt": "a7ead8cac705e5870bb621e8e024afbc",
+      "passwordHash": "c8a946bbd609c9de77aff509cd458574ac05151375f54b15cfc3b5eb8fb64c1588b233ec89a0f36ea57e9b592773fac0021151d93becfd44dad26c5751321ca2"
+    },
+    {
+      "id": "usr_teacher_khalid",
+      "username": "khalid",
+      "fullName": "أ. خالد جاسم المهندي",
+      "role": "TEACHER",
+      "isActive": true,
+      "assignedClasses": [
+        "الثاني إعدادي - 2",
+        "الثالث إعدادي - 1",
+        "الثالث إعدادي - 2"
+      ],
+      "createdAt": "2026-09-05T08:00:00Z",
+      "salt": "a7ead8cac705e5870bb621e8e024afbc",
+      "passwordHash": "c8a946bbd609c9de77aff509cd458574ac05151375f54b15cfc3b5eb8fb64c1588b233ec89a0f36ea57e9b592773fac0021151d93becfd44dad26c5751321ca2"
+    },
+    {
+      "id": "usr_scout_1",
+      "username": "scout_ahmed",
+      "fullName": "أحمد سلمان البلوشي",
+      "role": "SCOUT",
+      "nationalId": "120104523",
+      "isActive": true,
+      "avatarUrl": "",
+      "avatarStatus": "APPROVED",
+      "scoutId": "sct_1",
+      "createdAt": "2026-09-06T08:00:00Z",
+      "salt": "f11c99a6843065b607f85d38fe852917",
+      "passwordHash": "26902fb892f568ea3ed572ef62e954e028f064243cc60e5ccd009e5fef8e7f8e77d4f54746f03d20461b5860cd7af0f336c07fe51ff2b73533d145a27679c8ff"
+    },
+    {
+      "id": "usr_scout_2",
+      "username": "scout_yousef",
+      "fullName": "يوسف مبارك الدوسري",
+      "role": "SCOUT",
+      "nationalId": "120205841",
+      "isActive": true,
+      "avatarUrl": "",
+      "avatarStatus": "APPROVED",
+      "scoutId": "sct_2",
+      "createdAt": "2026-09-06T08:00:00Z",
+      "salt": "f11c99a6843065b607f85d38fe852917",
+      "passwordHash": "26902fb892f568ea3ed572ef62e954e028f064243cc60e5ccd009e5fef8e7f8e77d4f54746f03d20461b5860cd7af0f336c07fe51ff2b73533d145a27679c8ff"
+    },
+    {
+      "id": "usr_scout_3",
+      "username": "scout_ali",
+      "fullName": "علي حسن العوضي",
+      "role": "SCOUT",
+      "nationalId": "110309912",
+      "isActive": true,
+      "avatarUrl": "",
+      "avatarStatus": "APPROVED",
+      "scoutId": "sct_3",
+      "createdAt": "2026-09-06T08:00:00Z",
+      "salt": "f11c99a6843065b607f85d38fe852917",
+      "passwordHash": "26902fb892f568ea3ed572ef62e954e028f064243cc60e5ccd009e5fef8e7f8e77d4f54746f03d20461b5860cd7af0f336c07fe51ff2b73533d145a27679c8ff"
+    },
+    {
+      "id": "usr_scout_4",
+      "username": "scout_abdullah",
+      "fullName": "عبدالله إبراهيم الكواري",
+      "role": "SCOUT",
+      "nationalId": "110507722",
+      "isActive": true,
+      "avatarUrl": "",
+      "avatarStatus": "PENDING",
+      "scoutId": "sct_4",
+      "createdAt": "2026-09-06T08:00:00Z",
+      "salt": "f11c99a6843065b607f85d38fe852917",
+      "passwordHash": "26902fb892f568ea3ed572ef62e954e028f064243cc60e5ccd009e5fef8e7f8e77d4f54746f03d20461b5860cd7af0f336c07fe51ff2b73533d145a27679c8ff"
+    },
+    {
+      "id": "usr_parent_ahmed",
+      "username": "parent_ahmed",
+      "fullName": "سلمان البلوشي (ولي أمر)",
+      "role": "PARENT",
+      "phoneNumber": "973-39887766",
+      "isActive": true,
+      "linkedScoutIds": [
+        "sct_1"
+      ],
+      "createdAt": "2026-09-08T08:00:00Z",
+      "salt": "acdb5d145c9cedcfd51639e21f2fbcf7",
+      "passwordHash": "d76ffbde92a697df71e49d315d48f817aa97994e188c8f594cebd725d0f55cde6db16ae6d13a4346d1ee6ea8ef9f9e999af7d91332b1cc4af08ffe70409517f9"
+    }
+  ],
+  "scouts": [
+    {
+      "id": "sct_1",
+      "userId": "usr_scout_1",
+      "fullName": "أحمد سلمان البلوشي",
+      "nationalId": "120104523",
+      "grade": "الأول إعدادي",
+      "section": "1",
+      "patrolName": "طليعة الفاتح",
+      "avatarUrl": "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&h=200&fit=crop&crop=faces",
+      "avatarStatus": "APPROVED",
+      "totalPositivePoints": 9,
+      "totalDeductions": 2,
+      "netBalance": 7,
+      "badgeCount": 2,
+      "activitiesAttendedCount": 1,
+      "registrationYear": "2026-2027",
+      "status": "ACTIVE",
+      "parentName": "سلمان البلوشي",
+      "parentPhone": "973-39887766"
+    },
+    {
+      "id": "sct_2",
+      "userId": "usr_scout_2",
+      "fullName": "يوسف مبارك الدوسري",
+      "nationalId": "120205841",
+      "grade": "الأول إعدادي",
+      "section": "2",
+      "patrolName": "طليعة الصقر",
+      "avatarUrl": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=faces",
+      "avatarStatus": "APPROVED",
+      "totalPositivePoints": 5,
+      "totalDeductions": 0,
+      "netBalance": 5,
+      "badgeCount": 1,
+      "activitiesAttendedCount": 1,
+      "registrationYear": "2026-2027",
+      "status": "ACTIVE",
+      "parentName": "مبارك الدوسري",
+      "parentPhone": "973-39112233"
+    },
+    {
+      "id": "sct_3",
+      "userId": "usr_scout_3",
+      "fullName": "علي حسن العوضي",
+      "nationalId": "110309912",
+      "grade": "الثاني إعدادي",
+      "section": "1",
+      "patrolName": "طليعة اليرموك",
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces",
+      "avatarStatus": "APPROVED",
+      "totalPositivePoints": 0,
+      "totalDeductions": 0,
+      "netBalance": 0,
+      "badgeCount": 0,
+      "activitiesAttendedCount": 0,
+      "registrationYear": "2026-2027",
+      "status": "ACTIVE",
+      "parentName": "حسن العوضي",
+      "parentPhone": "973-39445566"
+    },
+    {
+      "id": "sct_4",
+      "userId": "usr_scout_4",
+      "fullName": "عبدالله إبراهيم الكواري",
+      "nationalId": "110507722",
+      "grade": "الثالث إعدادي",
+      "section": "1",
+      "patrolName": "طليعة حطين",
+      "avatarUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces",
+      "avatarStatus": "PENDING",
+      "totalPositivePoints": 0,
+      "totalDeductions": 0,
+      "netBalance": 0,
+      "badgeCount": 0,
+      "activitiesAttendedCount": 0,
+      "registrationYear": "2026-2027",
+      "status": "ACTIVE",
+      "parentName": "إبراهيم الكواري",
+      "parentPhone": "973-39778899"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "tch_1",
+      "userId": "usr_teacher_salman",
+      "fullName": "أ. سلمان راشد البنعلي",
+      "employeeId": "EMP-9021",
+      "subject": "العلوم العامة والفيزياء",
+      "assignedClasses": [
+        "الأول إعدادي - 1",
+        "الأول إعدادي - 2",
+        "الثاني إعدادي - 1"
+      ],
+      "evaluationsGivenCount": 14,
+      "status": "ACTIVE"
+    },
+    {
+      "id": "tch_2",
+      "userId": "usr_teacher_khalid",
+      "fullName": "أ. خالد جاسم المهندي",
+      "employeeId": "EMP-9034",
+      "subject": "الرياضيات",
+      "assignedClasses": [
+        "الثاني إعدادي - 2",
+        "الثالث إعدادي - 1",
+        "الثالث إعدادي - 2"
+      ],
+      "evaluationsGivenCount": 9,
+      "status": "ACTIVE"
+    }
+  ],
+  "evaluations": [
+    {
+      "id": "eval_1",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "scoutGrade": "الأول إعدادي",
+      "scoutSection": "1",
+      "evaluatorId": "usr_teacher_salman",
+      "evaluatorName": "أ. سلمان راشد البنعلي",
+      "evaluatorRole": "TEACHER",
+      "type": "POSITIVE",
+      "points": 5,
+      "behaviorCategory": "حسن الخلق والمبادرة",
+      "notes": "مساعدة زملائه في المختبر وحسن الإنصات",
+      "encouragementMessage": "استمر يا بطل! نفتخر بجهودك وأخلاقك العالية.",
+      "status": "APPROVED",
+      "reviewedById": "usr_basel",
+      "reviewedByName": "القائد باسل حسن",
+      "reviewDate": "2026-10-08T12:00:00Z",
+      "createdAt": "2026-10-08T09:15:00Z"
+    },
+    {
+      "id": "eval_2",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "scoutGrade": "الأول إعدادي",
+      "scoutSection": "1",
+      "evaluatorId": "usr_teacher_khalid",
+      "evaluatorName": "أ. خالد جاسم المهندي",
+      "evaluatorRole": "TEACHER",
+      "type": "POSITIVE",
+      "points": 4,
+      "behaviorCategory": "المشاركة الفعالة",
+      "notes": "تفاعل متميز وإجابات نموذجية في الحصة",
+      "encouragementMessage": "رائع، أحسنت! مشاركتك تصنع الفرق.",
+      "status": "APPROVED",
+      "reviewedById": "usr_mohammed",
+      "reviewedByName": "القائد محمد علي",
+      "reviewDate": "2026-10-09T13:00:00Z",
+      "createdAt": "2026-10-09T10:45:00Z"
+    },
+    {
+      "id": "eval_3",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "scoutGrade": "الأول إعدادي",
+      "scoutSection": "1",
+      "evaluatorId": "usr_teacher_salman",
+      "evaluatorName": "أ. سلمان راشد البنعلي",
+      "evaluatorRole": "TEACHER",
+      "type": "DEDUCTION",
+      "points": 2,
+      "behaviorCategory": "التحدث أثناء الشرح",
+      "notes": "تكرار الحديث الجانبي مع الزميل دون استئذان",
+      "encouragementMessage": "يرجى منك تصحيح السلوك، أنت قادر على التحسن وننتظر منك الأفضل.",
+      "status": "APPROVED",
+      "reviewedById": "usr_basel",
+      "reviewedByName": "القائد باسل حسن",
+      "reviewDate": "2026-10-11T11:00:00Z",
+      "createdAt": "2026-10-10T11:20:00Z"
+    },
+    {
+      "id": "eval_4",
+      "scoutId": "sct_2",
+      "scoutName": "يوسف مبارك الدوسري",
+      "scoutGrade": "الأول إعدادي",
+      "scoutSection": "2",
+      "evaluatorId": "usr_teacher_salman",
+      "evaluatorName": "أ. سلمان راشد البنعلي",
+      "evaluatorRole": "TEACHER",
+      "type": "POSITIVE",
+      "points": 5,
+      "behaviorCategory": "الانضباط والالتزام بالتعليمات",
+      "notes": "التزام تام بالهدوء ومساعدة المعلم في تنظيم الصف",
+      "encouragementMessage": "وحش، إنجاز مميز! استمر في التألق والتميز.",
+      "status": "APPROVED",
+      "reviewedById": "usr_mohammed",
+      "reviewedByName": "القائد محمد علي",
+      "reviewDate": "2026-10-12T12:00:00Z",
+      "createdAt": "2026-10-12T08:30:00Z"
+    },
+    {
+      "id": "eval_5",
+      "scoutId": "sct_4",
+      "scoutName": "عبدالله إبراهيم الكواري",
+      "scoutGrade": "الثالث إعدادي",
+      "scoutSection": "1",
+      "evaluatorId": "usr_teacher_khalid",
+      "evaluatorName": "أ. خالد جاسم المهندي",
+      "evaluatorRole": "TEACHER",
+      "type": "POSITIVE",
+      "points": 4,
+      "behaviorCategory": "المبادرة وتحمل المسؤولية",
+      "notes": "المبادرة بحل التمارين الصعبة وإشراك زملائه",
+      "encouragementMessage": "أحسنت يا بطل! مستواك مفخرة للفرقة الكشفية.",
+      "status": "PENDING",
+      "createdAt": "2026-10-15T09:00:00Z"
+    }
+  ],
+  "suspensionRequests": [
+    {
+      "id": "susp_1",
+      "scoutId": "sct_3",
+      "scoutName": "علي حسن العوضي",
+      "scoutGrade": "الثاني إعدادي",
+      "scoutSection": "1",
+      "requesterId": "usr_teacher_salman",
+      "requesterName": "أ. سلمان راشد البنعلي",
+      "requesterRole": "TEACHER",
+      "violationType": "الإخلال بالنظام والتأخر المتكرر",
+      "violationCount": 3,
+      "description": "تم التنبيه الشفهي مرتين على عدم تكرار التأخر والحديث غير اللائق أثناء الحصة، والمطلوب مراجعة السلوك.",
+      "targetActivities": "الأنشطة الميدانية والرحلات الخارجية",
+      "requestedDuration": "أسبوعان",
+      "status": "NEW",
+      "createdAt": "2026-10-14T11:00:00Z"
+    }
+  ],
+  "incidentReports": [
+    {
+      "id": "inc_1",
+      "title": "ملاحظة سلوكية حول الطابور الصباحي",
+      "category": "انضباطي",
+      "severity": "عادي",
+      "description": "لوحظ تحسن كبير في تنظيم كشافة الأول إعدادي للطابور الصباحي وتوزيع المهام بصورة ممتازة.",
+      "targetClass": "الأول إعدادي",
+      "senderId": "usr_teacher_salman",
+      "senderName": "أ. سلمان راشد البنعلي",
+      "senderRole": "TEACHER",
+      "status": "تمت المعالجة",
+      "leaderResponse": "شكرًا أستاذ سلمان على الرصد، سيتم تكريم الطليعة في اللقاء القادم.",
+      "respondedAt": "2026-10-12T13:00:00Z",
+      "createdAt": "2026-10-12T09:00:00Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "act_1",
+      "title": "المخيم الكشفي الخلوي التدريبي - الصخير",
+      "description": "مخيم تدريبي كشفي يهدف لتعليم فتيان أحمد الفاتح مبادئ التخييم والطهي الخلوي واستخدام البوصلة والربطات الكشفية وتعزيز الاعتماد على النفس.",
+      "type": "EXTERNAL",
+      "location": "منطقة الصخير الكشفية - مملكة البحرين",
+      "date": "2026-11-06",
+      "time": "07:30 صباحًا",
+      "returnTime": "04:00 مساءً",
+      "targetGrades": [
+        "الأول إعدادي",
+        "الثاني إعدادي",
+        "الثالث إعدادي"
+      ],
+      "status": "PUBLISHED",
+      "requiresParentConsent": true,
+      "emergencyContact": "القائد باسل: 39001122 - القائد محمد: 39003344",
+      "requiredItems": "الزي الكشفي الكامل، مطارة ماء، كشاف يدوي، دفتر وقلم كشفي، حذاء رياضي مناسب.",
+      "meetingInstructions": "التجمع عند البوابة الرئيسية للمدرسة في تمام الساعة 7:00 صباحًا، والانطلاق بالحافلات 7:30.",
+      "images": [
+        "https://images.unsplash.com/photo-1510312305653-8ed496efae75?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800&auto=format&fit=crop"
+      ],
+      "attendeesCount": 28,
+      "createdAt": "2026-10-01T08:00:00Z"
+    },
+    {
+      "id": "act_2",
+      "title": "دورة العقد الكشفية والإسعافات الأولية الميدانية",
+      "description": "ورشة عمل داخلية في النادي الكشفي بالمدرسة لتدريب الفتيان على العقد الأساسية وكيفية التعامل مع الحوادث البسيطة بالتعاون مع الهلال الأحمر البحريني.",
+      "type": "INTERNAL",
+      "location": "مقر النادي الكشفي بمدرسة أحمد الفاتح",
+      "date": "2026-10-24",
+      "time": "10:00 صباحًا",
+      "returnTime": "12:30 ظهرًا",
+      "targetGrades": [
+        "الأول إعدادي",
+        "الثاني إعدادي"
+      ],
+      "status": "PUBLISHED",
+      "requiresParentConsent": false,
+      "requiredItems": "حبال كشفية، وشاح الكشافة.",
+      "images": [
+        "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=800&auto=format&fit=crop"
+      ],
+      "attendeesCount": 35,
+      "createdAt": "2026-10-05T08:00:00Z"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "att_1",
+      "activityId": "act_1",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "status": "PRESENT",
+      "parentConsentApproved": true,
+      "notes": "مشاركة ممتازة والتزام بالمواعيد",
+      "markedAt": "2026-11-06T07:15:00Z"
+    },
+    {
+      "id": "att_2",
+      "activityId": "act_1",
+      "scoutId": "sct_2",
+      "scoutName": "يوسف مبارك الدوسري",
+      "status": "PRESENT",
+      "parentConsentApproved": true,
+      "notes": "حضور مبكر وتفاعل طيب",
+      "markedAt": "2026-11-06T07:10:00Z"
+    }
+  ],
+  "badges": [
+    {
+      "id": "bdg_1",
+      "title": "كشاف متميز",
+      "description": "يُمنح للكشاف المتميز في الانضباط والمبادرة الكشفية",
+      "category": "كشفي",
+      "icon": "Award",
+      "criteria": "الحصول على 30 نقطة إيجابية والمشاركة في 3 فعاليات"
+    },
+    {
+      "id": "bdg_2",
+      "title": "حسن الخلق",
+      "description": "يُمنح للتحلي بالأخلاق الرفيعة والتعامل الراقي مع المعلمين والزملاء",
+      "category": "أخلاقي",
+      "icon": "Heart",
+      "criteria": "تكرار تقييم حسن الخلق 5 مرات متتالية دون مخالفات"
+    },
+    {
+      "id": "bdg_3",
+      "title": "التعاون وروح الفريق",
+      "description": "يُمنح للتميز في خدمة الزملاء والعمل الجماعي بالطليعة",
+      "category": "مهاري",
+      "icon": "Users",
+      "criteria": "المبادرة الإيجابية في الأنشطة الميدانية"
+    },
+    {
+      "id": "bdg_4",
+      "title": "القيادة الكشفية",
+      "description": "يُمنح لعريف الطليعة المبدع في إدارة مجموعته وتحفيزهم",
+      "category": "قيادي",
+      "icon": "Shield",
+      "criteria": "قيادة الطليعة في مخيم أو مسير كشفي بنجاح"
+    },
+    {
+      "id": "bdg_5",
+      "title": "خدمة المجتمع والبيئة",
+      "description": "يُمنح للمساهمة في المبادرات التطوعية ونظافة المدرسة والبيئة",
+      "category": "خدمة مجتمع",
+      "icon": "Sparkles",
+      "criteria": "المشاركة في فعاليات خدمة المجتمع بفرقة الفاتح"
+    },
+    {
+      "id": "bdg_6",
+      "title": "الالتزام والانضباط",
+      "description": "يُمنح للكشاف الملتزم بالحضور في الموعد والزي الكشفي الكامل",
+      "category": "كشفي",
+      "icon": "CheckCircle",
+      "criteria": "عدم تسجيل أي تأخير أو خصم انضباطي طوال الفصل"
+    }
+  ],
+  "awardedBadges": [
+    {
+      "id": "awb_1",
+      "badgeId": "bdg_1",
+      "badgeTitle": "كشاف متميز",
+      "badgeCategory": "كشفي",
+      "badgeIcon": "Award",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "awardedById": "usr_basel",
+      "awardedByName": "القائد باسل حسن",
+      "notes": "تفوق ملحوظ في مخيم الصخير والانضباط السلوكي",
+      "awardedAt": "2026-10-01T10:00:00Z"
+    },
+    {
+      "id": "awb_2",
+      "badgeId": "bdg_2",
+      "badgeTitle": "حسن الخلق",
+      "badgeCategory": "أخلاقي",
+      "badgeIcon": "Heart",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "awardedById": "usr_mohammed",
+      "awardedByName": "القائد محمد علي",
+      "notes": "قدوة حسنة لزملائه في الطليعة والمدرسة",
+      "awardedAt": "2026-10-05T09:30:00Z"
+    },
+    {
+      "id": "awb_3",
+      "badgeId": "bdg_1",
+      "badgeTitle": "كشاف متميز",
+      "badgeCategory": "كشفي",
+      "badgeIcon": "Award",
+      "scoutId": "sct_2",
+      "scoutName": "يوسف مبارك الدوسري",
+      "awardedById": "usr_basel",
+      "awardedByName": "القائد باسل حسن",
+      "notes": "انضباط ممتاز ومبادرة طيبة",
+      "awardedAt": "2026-10-04T11:00:00Z"
+    }
+  ],
+  "certificates": [
+    {
+      "id": "cert_1",
+      "certificateNumber": "AF-SCOUT-2026-001",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "scoutGrade": "الأول إعدادي",
+      "scoutSection": "1",
+      "title": "شهادة تميز وانضباط كشفي",
+      "reason": "تقديراً لسلوكه المثالي وأخلاقه العالية وتميزه في الأنشطة الميدانية ومخيم الصخير الكشفي",
+      "achievementType": "شرف الفرقة الأول",
+      "date": "2026-10-15",
+      "issuerLeaderName": "القائد باسل حسن & القائد محمد علي",
+      "templateId": "GOLDEN",
+      "createdAt": "2026-10-15T12:00:00Z"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann_1",
+      "title": "انطلاق اللقاءات الدورية لطليعتي الفاتح والصقر",
+      "content": "تعلن قيادة الفرقة عن بدء اللقاءات التدريبية الأسبوعية كل ثلاثاء في النادي الكشفي بعد الدوام المدرسي، متمنين للجميع الاستفادة والتميز.",
+      "category": "تنبيه هام",
+      "isPublic": true,
+      "authorName": "القائد باسل حسن",
+      "createdAt": "2026-10-10T08:00:00Z"
+    },
+    {
+      "id": "ann_2",
+      "title": "فتح باب رفع الصور الشخصية بالزي الكشفي الرسمي",
+      "content": "يُرجى من جميع الكشافين المسجلين رفع صورهم الحديثة بالبدلة الكشفية المعتمدة لاعتماد بطاقات العضوية والشارات وشاشة التميز السنوية.",
+      "category": "إرشادات كشفية",
+      "isPublic": true,
+      "authorName": "القائد محمد علي",
+      "createdAt": "2026-10-12T09:00:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_1",
+      "recipientUserId": "usr_scout_1",
+      "title": "تم اعتماد نقاط إيجابية جديدة (+5)",
+      "message": "قام أ. سلمان البنعلي بمنحك 5 نقاط عن حسن الخلق والمبادرة، واعتمدها القائد باسل.",
+      "type": "POINT_ADDED",
+      "isRead": false,
+      "createdAt": "2026-10-08T12:00:00Z"
+    },
+    {
+      "id": "notif_2",
+      "recipientUserId": "usr_scout_1",
+      "title": "مبارك! حصلت على شارة كشاف متميز",
+      "message": "تم منحك شارة كشاف متميز تقديراً لجهودك ومشاركتك في مخيم الصخير.",
+      "type": "BADGE",
+      "isRead": false,
+      "createdAt": "2026-10-01T10:00:00Z"
+    },
+    {
+      "id": "notif_3",
+      "recipientUserId": "usr_parent_ahmed",
+      "title": "تقييم إيجابي جديد لابنكم أحمد (+5)",
+      "message": "سجل أ. سلمان البنعلي 5 نقاط إيجابية لأحمد عن حسن الخلق في المدرسة.",
+      "type": "POINT_ADDED",
+      "isRead": false,
+      "createdAt": "2026-10-08T12:05:00Z"
+    }
+  ],
+  "parentEncouragements": [
+    {
+      "id": "penc_1",
+      "parentId": "usr_parent_ahmed",
+      "parentName": "سلمان البلوشي (ولي الأمر)",
+      "scoutId": "sct_1",
+      "scoutName": "أحمد سلمان البلوشي",
+      "message": "فخورون بك يا بطل! واصل التميز والاجتهاد والأخلاق الطيبة، رفعت رؤوسنا جميعاً.",
+      "status": "APPROVED",
+      "createdAt": "2026-10-09T14:00:00Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "0ca2d49f-9e3f-40e3-923c-75d0d1ebbda2",
+      "action": "تسجيل دخول ناجح",
+      "actorId": "usr_teacher_salman",
+      "actorName": "أ. سلمان راشد البنعلي",
+      "actorRole": "TEACHER",
+      "targetResource": "Auth",
+      "details": "دخول إلى حساب أ. سلمان راشد البنعلي",
+      "timestamp": "2026-10-16T19:13:01.340Z"
+    },
+    {
+      "id": "21e7ed96-849e-4331-9c4d-75dca1c98432",
+      "action": "تسجيل دخول ناجح",
+      "actorId": "usr_mohammed",
+      "actorName": "القائد محمد علي",
+      "actorRole": "LEADER",
+      "targetResource": "Auth",
+      "details": "دخول إلى حساب القائد محمد علي",
+      "timestamp": "2026-10-16T19:12:56.757Z"
+    },
+    {
+      "id": "f733e12c-c64c-4191-a130-1e34f7e6dfeb",
+      "action": "تسجيل دخول ناجح",
+      "actorId": "usr_basel",
+      "actorName": "القائد باسل حسن",
+      "actorRole": "LEADER",
+      "targetResource": "Auth",
+      "details": "دخول إلى حساب القائد باسل حسن",
+      "timestamp": "2026-10-16T19:12:52.379Z"
+    },
+    {
+      "id": "1fdb72bf-c2ed-4248-b5e2-e4bf5607a774",
+      "action": "تسجيل دخول ناجح",
+      "actorId": "usr_admin",
+      "actorName": "مدير مدرسة أحمد الفاتح الإعدادية",
+      "actorRole": "ADMIN",
+      "targetResource": "Auth",
+      "details": "دخول إلى حساب مدير مدرسة أحمد الفاتح الإعدادية",
+      "timestamp": "2026-10-16T19:12:47.854Z"
+    },
+    {
+      "id": "aud_1",
+      "action": "تهيئة النظام وقاعدة البيانات",
+      "actorId": "usr_basel",
+      "actorName": "القائد باسل حسن",
+      "actorRole": "LEADER",
+      "targetResource": "System",
+      "details": "تم بدء تدشين منصة فرقة فتيان أحمد الفاتح الكشفية للعام الدراسي 2026-2027.",
+      "timestamp": "2026-09-01T08:00:00Z"
+    },
+    {
+      "id": "aud_2",
+      "action": "اعتماد نقاط سلوكية",
+      "actorId": "usr_basel",
+      "actorName": "القائد باسل حسن",
+      "actorRole": "LEADER",
+      "targetResource": "Points",
+      "details": "اعتماد 5 نقاط إيجابية للكشاف أحمد سلمان البلوشي مقترحة من أ. سلمان البنعلي.",
+      "timestamp": "2026-10-08T12:00:00Z"
+    }
+  ]
+}

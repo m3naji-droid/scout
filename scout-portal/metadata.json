@@ -1,0 +1,6 @@
+{
+  "name": "فرقة فتيان أحمد الفاتح الكشفية",
+  "description": "المنصة الكشفية الرقمية الشاملة لإدارة ومتابعة فرقة فتيان أحمد الفاتح الكشفية بمملكة البحرين - تقييم السلوك والانضباط، الفعاليات، التميز، والشارات",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
