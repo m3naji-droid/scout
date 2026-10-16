@@ -35,7 +35,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
   const [leaderMsgSuccess, setLeaderMsgSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (selectedLinkedScout) {
+    if (selectedLinkedScout?.id) {
       loadSonDetails(selectedLinkedScout.id);
     }
   }, [selectedLinkedScout]);
@@ -44,9 +44,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
     try {
       setLoading(true);
       const data = await api.getScoutDetails(id);
-      setScoutDetails(data);
+      setScoutDetails(data || { evaluations: [], badges: [], certificates: [] });
     } catch (err) {
       console.error('Failed loading son details:', err);
+      setScoutDetails({ evaluations: [], badges: [], certificates: [] });
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
     if (!user || !selectedLinkedScout) return;
     const finalMsg = customText.trim() || encouragementText;
     try {
-      await api.sendParentEncouragement(user.id, user.fullName, selectedLinkedScout.id, finalMsg);
+      await api.sendParentEncouragement(user.id, user.fullName || 'ولي الأمر', selectedLinkedScout.id, finalMsg);
       setMsgSuccess('تم إرسال رسالة التشجيع لابنك بنجاح وستظهر في حسابه!');
       setCustomText('');
       setTimeout(() => setMsgSuccess(null), 3500);
@@ -72,13 +73,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
     try {
       await api.submitIncidentReport(
         {
-          title: `رسالة من ولي أمر الطالب: ${selectedLinkedScout.fullName}`,
+          title: `رسالة من ولي أمر الطالب: ${selectedLinkedScout?.fullName || 'طالب'}`,
           category: 'عام',
           severity: 'عادي',
           description: `${leaderMsgTitle}\n\n${leaderMsgBody}`,
           scoutId: selectedLinkedScout.id
         },
-        { id: user.id, name: user.fullName, role: user.role }
+        { id: user.id, name: user.fullName || 'ولي الأمر', role: user.role }
       );
       setLeaderMsgSuccess('تم إرسال استفسارك إلى قيادة الفرقة بنجاح.');
       setLeaderMsgTitle('');
@@ -102,7 +103,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
             <span>بوابة ولي الأمر لمتابعة السلوك والإنجاز الكشفي</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">
-            أهلاً بك، {user?.fullName}
+            أهلاً بك، {user?.fullName || 'ولي الأمر'}
           </h1>
           <p className="text-xs sm:text-sm text-indigo-200">
             متابعة مستمرة ومباشرة لمسيرة ابنكم الكشفية والسلوكية بمدرسة أحمد الفاتح الإعدادية
@@ -119,7 +120,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
       </div>
 
       {/* Multiple Sons Switcher */}
-      {linkedScouts.length > 1 && (
+      {linkedScouts && linkedScouts.length > 1 && (
         <div className="bg-white rounded-2xl p-4 border border-slate-200 flex items-center gap-3">
           <span className="text-xs font-bold text-slate-500">اختر الابن للمتابعة:</span>
           {linkedScouts.map(son => (
@@ -132,7 +133,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {son.fullName}
+              {son.fullName || 'ابن'}
             </button>
           ))}
         </div>
@@ -145,25 +146,25 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
             <div className="flex items-center gap-4 text-center sm:text-right">
               <div className="w-20 h-20 rounded-2xl bg-emerald-50 border-2 border-emerald-300 overflow-hidden shrink-0 flex items-center justify-center">
                 {selectedLinkedScout.avatarUrl && selectedLinkedScout.avatarStatus === 'APPROVED' ? (
-                  <img src={selectedLinkedScout.avatarUrl} alt={selectedLinkedScout.fullName} className="w-full h-full object-cover" />
+                  <img src={selectedLinkedScout.avatarUrl} alt={selectedLinkedScout.fullName || 'كشاف'} className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-2xl font-black text-emerald-800">
-                    {selectedLinkedScout.fullName.charAt(0)}
+                    {selectedLinkedScout.fullName ? selectedLinkedScout.fullName.charAt(0) : 'ك'}
                   </div>
                 )}
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-slate-900">{selectedLinkedScout.fullName}</h2>
+                <h2 className="text-xl font-bold text-slate-900">{selectedLinkedScout.fullName || 'الكشاف'}</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {selectedLinkedScout.grade} • شعبة {selectedLinkedScout.section} • {selectedLinkedScout.patrolName || 'طليعة الفاتح'}
+                  {selectedLinkedScout.grade || 'الإعدادية'} • شعبة {selectedLinkedScout.section || '1'} • {selectedLinkedScout.patrolName || 'طليعة الفاتح'}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                    رصيد النقاط: {selectedLinkedScout.netBalance} نقطة معتمدة
+                    رصيد النقاط: {selectedLinkedScout.netBalance || 0} نقطة معتمدة
                   </span>
                   <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
-                    الشارات: {selectedLinkedScout.badgeCount}
+                    الشارات: {selectedLinkedScout.badgeCount || 0}
                   </span>
                 </div>
               </div>
@@ -248,7 +249,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
                           <p className="text-xs text-slate-600 mt-1">«{ev.encouragementMessage}»</p>
                         )}
                         <span className="text-[10px] text-slate-400 block mt-1.5">
-                          بواسطة: {ev.evaluatorName} • {new Date(ev.createdAt).toLocaleDateString('ar-BH')}
+                          بواسطة: {ev.evaluatorName || 'المعلم'} • {ev.createdAt ? new Date(ev.createdAt).toLocaleDateString('ar-BH') : ''}
                         </span>
                       </div>
                     ))
