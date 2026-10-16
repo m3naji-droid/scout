@@ -17,10 +17,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// قائمة القادة المعتمدين والمصرح لهم بإدارة الفرقة وإضافة باقي الفئات
+// قائمة القادة المعتمدين مع كافة الخصائص لتجنب أخطاء الفحص النصي
 const MOCK_USERS: any[] = [
-  { id: 'leader_basel', username: 'باسل', password: '1234', role: 'LEADER', name: 'القائد باسل حسن', isActive: true },
-  { id: 'leader_mohammed', username: 'محمد', password: '5678', role: 'LEADER', name: 'القائد محمد علي', isActive: true },
+  { 
+    id: 'leader_basel', 
+    username: 'باسل', 
+    password: '1234', 
+    role: 'LEADER', 
+    name: 'القائد باسل حسن', 
+    fullName: 'القائد باسل حسن',
+    isActive: true 
+  },
+  { 
+    id: 'leader_mohammed', 
+    username: 'محمد', 
+    password: '5678', 
+    role: 'LEADER', 
+    name: 'القائد محمد علي', 
+    fullName: 'القائد محمد علي',
+    isActive: true 
+  },
 ];
 
 const MOCK_SCOUTS: ScoutProfile[] = [];
