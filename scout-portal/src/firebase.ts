@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCDE2Y7MMEolBdyBLQ0ljGigfH6_eoCuCo",
@@ -11,4 +12,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// تصدير قاعدة البيانات لاستخدامها في التطبيق
+export const db = getFirestore(app);
+
 export default app;
