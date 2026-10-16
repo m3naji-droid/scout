@@ -122,13 +122,8 @@ export const api = {
     }
   },
 
-  // إضافة كشاف جديد (متاحة للقائد) مع توليد حساب دخول خاص به
-  addScout: async (scoutData: any, actor: any) => {
+  addScout: async (scoutData: any) => {
     try {
-      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
-        throw new Error('غير مصرح لك بإضافة كشافين جدد');
-      }
-
       const scoutRef = await addDoc(collection(db, 'scouts'), {
         ...scoutData,
         totalPositivePoints: 0,
@@ -138,16 +133,13 @@ export const api = {
         activitiesAttendedCount: 0,
         registrationYear: '2026-2027',
         status: 'ACTIVE',
-        avatarStatus: 'APPROVED',
-        avatarUrl: scoutData.avatarUrl || ''
+        avatarStatus: 'APPROVED'
       });
 
-      // إنشاء حساب دخول للكشاف في مجموعة users تلقائياً باستخدام الرقم الشخصي
       await addDoc(collection(db, 'users'), {
-        username: scoutData.nationalId,
+        username: scoutData.nationalId || scoutData.username,
         fullName: scoutData.fullName,
         role: 'SCOUT',
-        nationalId: scoutData.nationalId,
         scoutId: scoutRef.id,
         isActive: true,
         createdAt: new Date().toISOString()
@@ -165,37 +157,49 @@ export const api = {
     return { success: true };
   },
 
-  // إضافة ولي أمر وربطه بالكشاف بدقة عبر معرف الكشاف (scoutId)
-  addParentAccount: async (parentData: { fullName: string, username: string, passwordHash: string, linkedScoutId: string, phoneNumber?: string }, actor: any) => {
+  // Teachers Management (تمت إضافة addTeacher لتلافي الخطأ)
+  getTeachers: async () => {
     try {
-      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
-        throw new Error('غير مصرح لك بإضافة حسابات أولياء الأمور');
-      }
-
-      await addDoc(collection(db, 'users'), {
-        username: parentData.username,
-        fullName: parentData.fullName,
-        role: 'PARENT',
-        phoneNumber: parentData.phoneNumber || '',
-        linkedScoutIds: [parentData.linkedScoutId], // ربط ولي الأمر برقم معرف الكشاف الصحيح
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        passwordHash: parentData.passwordHash
-      });
-
-      return { success: true, message: 'تم ربط ولي الأمر بالكشاف بنجاح' };
-    } catch (err: any) {
-      throw new Error('فشل إضافة ولي الأمر: ' + err.message);
+      const snap = await getDocs(collection(db, 'teachers'));
+      const teachers: TeacherProfile[] = [];
+      snap.forEach(d => teachers.push({ id: d.id, ...d.data() } as TeacherProfile));
+      return teachers;
+    } catch (err) {
+      return [];
     }
   },
 
-  // إضافة معلم أو مستخدم جديد بواسطة القائد
-  addUserAccount: async (userData: { fullName: string, username: string, passwordHash: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[], employeeId?: string, subject?: string }, actor: any) => {
+  addTeacher: async (teacherData: { fullName: string, employeeId: string, subject: string, assignedClasses?: string[] }) => {
     try {
-      if (actor.role !== 'LEADER' && actor.role !== 'ADMIN') {
-        throw new Error('غير مصرح لك بإضافة حسابات مستخدمين');
-      }
+      // 1. إضافة المعلم إلى مجموعة teachers
+      const teacherRef = await addDoc(collection(db, 'teachers'), {
+        fullName: teacherData.fullName,
+        employeeId: teacherData.employeeId,
+        subject: teacherData.subject || 'عام',
+        assignedClasses: teacherData.assignedClasses || [],
+        evaluationsGivenCount: 0,
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString()
+      });
 
+      // 2. إنشاء حساب دخول خاص به في مجموعة users تلقائياً
+      await addDoc(collection(db, 'users'), {
+        username: teacherData.employeeId, // استخدام الرقم الوظيفي كاسم مستخدم افتراضي
+        fullName: teacherData.fullName,
+        role: 'TEACHER',
+        password: 'password123', // كلمة مرور افتراضية يمكنه تغييرها لاحقاً
+        isActive: true,
+        createdAt: new Date().toISOString()
+      });
+
+      return { id: teacherRef.id, success: true, message: 'تم إضافة المعلم وحساب الدخول بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل إضافة المعلم: ' + err.message);
+    }
+  },
+
+  addUserAccount: async (userData: { fullName: string, username: string, passwordHash: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[], employeeId?: string, subject?: string }) => {
+    try {
       const userRef = await addDoc(collection(db, 'users'), {
         username: userData.username,
         fullName: userData.fullName,
@@ -224,6 +228,25 @@ export const api = {
     }
   },
 
+  // Parent Management
+  addParentAccount: async (parentData: { fullName: string, username: string, passwordHash: string, linkedScoutId: string, phoneNumber?: string }) => {
+    try {
+      await addDoc(collection(db, 'users'), {
+        username: parentData.username,
+        fullName: parentData.fullName,
+        role: 'PARENT',
+        phoneNumber: parentData.phoneNumber || '',
+        linkedScoutIds: [parentData.linkedScoutId],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        passwordHash: parentData.passwordHash
+      });
+      return { success: true, message: 'تم ربط ولي الأمر بالكشاف بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل إضافة ولي الأمر: ' + err.message);
+    }
+  },
+
   uploadScoutAvatar: async (scoutId: string, avatarDataUrl: string) => {
     const docRef = doc(db, 'scouts', scoutId);
     await updateDoc(docRef, { avatarUrl: avatarDataUrl, avatarStatus: 'PENDING' });
@@ -234,18 +257,6 @@ export const api = {
     const docRef = doc(db, 'scouts', scoutId);
     await updateDoc(docRef, { avatarStatus: decision, avatarRejectionReason: reason });
     return { success: true };
-  },
-
-  // Teachers
-  getTeachers: async () => {
-    try {
-      const snap = await getDocs(collection(db, 'teachers'));
-      const teachers: TeacherProfile[] = [];
-      snap.forEach(d => teachers.push({ id: d.id, ...d.data() } as TeacherProfile));
-      return teachers;
-    } catch (err) {
-      return [];
-    }
   },
 
   // Evaluations / Points
@@ -264,7 +275,7 @@ export const api = {
     const payload = {
       ...evalData,
       evaluatorId: actor.id,
-      evaluatorName: actor.fullName,
+      evaluatorName: actor.fullName || actor.name,
       evaluatorRole: actor.role,
       status: evalData.type === 'POSITIVE' ? 'APPROVED' : 'PENDING',
       createdAt: new Date().toISOString()
@@ -338,11 +349,11 @@ export const api = {
   },
 
   // Incident Reports
-  submitIncidentReport: async (reportData: data, actor: any) => {
+  submitIncidentReport: async (reportData: any, actor: any) => {
     await addDoc(collection(db, 'incidentReports'), {
       ...reportData,
       senderId: actor.id,
-      senderName: actor.fullName,
+      senderName: actor.fullName || actor.name,
       senderRole: actor.role,
       status: 'جديد',
       createdAt: new Date().toISOString()
