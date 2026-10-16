@@ -4,28 +4,60 @@ import {
   Certificate, Announcement, AppNotification, ParentEncouragement, AuditLogItem, SiteSettings 
 } from '../types';
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, addDoc, query, where, deleteDoc } from 'firebase/firestore';
 
 export const api = {
   // Public Info
   getPublicInfo: async () => {
-    return {
-      troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
-      schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
-      season: '2025-2026',
-      announcements: [],
-      upcomingActivities: [],
-      stats: { scoutsCount: 4, teachersCount: 2, activitiesCount: 2 }
-    };
+    try {
+      const scoutsSnap = await getDocs(collection(db, 'scouts'));
+      const teachersSnap = await getDocs(collection(db, 'teachers'));
+      const activitiesSnap = await getDocs(collection(db, 'activities'));
+      const announcementsSnap = await getDocs(collection(db, 'announcements'));
+
+      const announcements: Announcement[] = [];
+      announcementsSnap.forEach(d => announcements.push({ id: d.id, ...d.data() } as Announcement));
+
+      const activities: Partial<TroopActivity>[] = [];
+      activitiesSnap.forEach(d => activities.push({ id: d.id, ...d.data() } as TroopActivity));
+
+      return {
+        troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
+        schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
+        season: '2025-2026',
+        announcements,
+        upcomingActivities: activities,
+        stats: { 
+          scoutsCount: scoutsSnap.size, 
+          teachersCount: teachersSnap.size, 
+          activitiesCount: activitiesSnap.size 
+        }
+      };
+    } catch (err) {
+      console.error('Error fetching public info:', err);
+      return {
+        troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
+        schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
+        season: '2025-2026',
+        announcements: [],
+        upcomingActivities: [],
+        stats: { scoutsCount: 0, teachersCount: 0, activitiesCount: 0 }
+      };
+    }
   },
 
-  // Auth
-  login: async (username: string, password: string) => {
-    return { success: true };
-  },
-
+  // Auth & Passwords
   changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
-    return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) throw new Error('المستخدم غير موجود');
+      
+      await updateDoc(userRef, { password: newPassword });
+      return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
+    } catch (err: any) {
+      throw new Error(err.message || 'فشل تغيير كلمة المرور');
+    }
   },
 
   // Distinction Top 3
@@ -37,33 +69,28 @@ export const api = {
         scouts.push({ id: doc.id, ...doc.data() });
       });
       scouts.sort((a, b) => (b.netBalance || 0) - (a.netBalance || 0));
-      return scouts.slice(0, 3);
+      return {
+        periodName: 'منافسة درع الفاتح السنوية',
+        topScouts: scouts.slice(0, 3)
+      };
     } catch (err) {
-      return [
-        { id: 's1', fullName: 'أحمد محمد', netBalance: 45, patrolName: 'طليعة الفاتح', grade: 'الأول إعدادي', section: '1' }
-      ];
+      console.error('Error fetching distinction:', err);
+      return { periodName: 'منافسة درع الفاتح السنوية', topScouts: [] };
     }
   },
 
   // Scouts
-  getScouts: async (filters?: { grade?: string; section?: string; status?: string }) => {
+  getScouts: async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
       const scouts: ScoutProfile[] = [];
       querySnapshot.forEach((doc) => {
         scouts.push({ id: doc.id, ...doc.data() } as ScoutProfile);
       });
-      if (scouts.length === 0) {
-        return [
-          { id: 's1', fullName: 'أحمد محمد', nationalId: '009731234', grade: 'الأول إعدادي', section: '1', netBalance: 25, status: 'ACTIVE', badgeCount: 2, patrolName: 'طليعة الفاتح', avatarStatus: 'APPROVED' }
-        ] as ScoutProfile[];
-      }
       return scouts;
     } catch (err) {
       console.error('Error fetching scouts:', err);
-      return [
-        { id: 's1', fullName: 'أحمد محمد', nationalId: '009731234', grade: 'الأول إعدادي', section: '1', netBalance: 25, status: 'ACTIVE', badgeCount: 2, patrolName: 'طليعة الفاتح', avatarStatus: 'APPROVED' }
-      ] as ScoutProfile[];
+      return [];
     }
   },
 
@@ -71,36 +98,39 @@ export const api = {
     try {
       const docRef = doc(db, 'scouts', id);
       const docSnap = await getDoc(docRef);
-      const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : { id, fullName: 'أحمد محمد', netBalance: 25, grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح' };
+      const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
       
-      return {
-        scout,
-        evaluations: [
-          { id: 'e1', scoutId: id, type: 'POSITIVE', points: 3, behaviorCategory: 'حسن الخلق والتعامل الراقي', status: 'APPROVED', evaluatorName: 'أ. سلمان', createdAt: new Date().toISOString(), encouragementMessage: 'رائع، أحسنت!' }
-        ],
-        badges: [
-          { id: 'b1', scoutId: id, badgeTitle: 'شارة الكشاف المتقدم', badgeCategory: 'مهارات', awardedAt: new Date().toISOString() }
-        ],
-        certificates: [
-          { id: 'c1', scoutId: id, title: 'شهادة تميز سلوكي', certificateNumber: 'CERT-2026-001', issuedAt: new Date().toISOString() }
-        ]
-      };
+      // Fetch evaluations for this scout
+      const evalsQuery = query(collection(db, 'evaluations'), where('scoutId', '==', id));
+      const evalsSnap = await getDocs(evalsQuery);
+      const evaluations: PointEvaluation[] = [];
+      evalsSnap.forEach(d => evaluations.push({ id: d.id, ...d.data() } as PointEvaluation));
+
+      // Fetch badges for this scout
+      const badgesQuery = query(collection(db, 'awardedBadges'), where('scoutId', '==', id));
+      const badgesSnap = await getDocs(badgesQuery);
+      const badges: AwardedBadge[] = [];
+      badgesSnap.forEach(d => badges.push({ id: d.id, ...d.data() } as AwardedBadge));
+
+      // Fetch certificates
+      const certsQuery = query(collection(db, 'certificates'), where('scoutId', '==', id));
+      const certsSnap = await getDocs(certsQuery);
+      const certificates: Certificate[] = [];
+      certsSnap.forEach(d => certificates.push({ id: d.id, ...d.data() } as Certificate));
+
+      return { scout, evaluations, badges, certificates };
     } catch (err) {
-      return { 
-        scout: { id, fullName: 'أحمد محمد', netBalance: 25, grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح' }, 
-        evaluations: [], 
-        badges: [], 
-        certificates: [] 
-      };
+      console.error('Error loading scout details:', err);
+      return { scout: null, evaluations: [], badges: [], certificates: [] };
     }
   },
 
-  addScout: async (scoutData: any, actor: any) => {
+  addScout: async (scoutData: any) => {
     const docRef = await addDoc(collection(db, 'scouts'), scoutData);
     return { id: docRef.id, ...scoutData };
   },
 
-  updateScout: async (id: string, updates: any, actor: any) => {
+  updateScout: async (id: string, updates: any) => {
     const docRef = doc(db, 'scouts', id);
     await updateDoc(docRef, updates);
     return { success: true };
@@ -112,7 +142,7 @@ export const api = {
     return { message: 'تم إرسال الصورة بنجاح وتنتظر اعتماد القائد' };
   },
 
-  reviewScoutAvatar: async (scoutId: string, decision: 'APPROVED' | 'REJECTED', reason: string, actor: any) => {
+  reviewScoutAvatar: async (scoutId: string, decision: 'APPROVED' | 'REJECTED', reason: string) => {
     const docRef = doc(db, 'scouts', scoutId);
     await updateDoc(docRef, { avatarStatus: decision, avatarRejectionReason: reason });
     return { success: true };
@@ -120,75 +150,114 @@ export const api = {
 
   // Teachers
   getTeachers: async () => {
-    return [
-      { id: 't1', userId: 'teacher_1', name: 'أ. سلمان', subject: 'كشافة', assignedClasses: ['الأول إعدادي - 1', 'الأول إعدادي - 2'] }
-    ] as TeacherProfile[];
+    try {
+      const snap = await getDocs(collection(db, 'teachers'));
+      const teachers: TeacherProfile[] = [];
+      snap.forEach(d => teachers.push({ id: d.id, ...d.data() } as TeacherProfile));
+      return teachers;
+    } catch (err) {
+      return [];
+    }
   },
-
-  addTeacher: async (teacherData: any, actor: any) => { return { success: true, ...teacherData }; },
-  updateTeacherClasses: async (id: string, assignedClasses: string[]) => { return { success: true }; },
 
   // Evaluations / Points
-  getEvaluations: async (filters?: { scoutId?: string; status?: string; type?: string }) => {
-    return [
-      { id: 'e1', scoutId: 's1', type: 'POSITIVE', points: 3, behaviorCategory: 'حسن الخلق والتعامل الراقي', status: 'APPROVED', evaluatorName: 'أ. سلمان', createdAt: new Date().toISOString(), encouragementMessage: 'رائع، أحسنت!' }
-    ] as PointEvaluation[];
+  getEvaluations: async () => {
+    try {
+      const snap = await getDocs(collection(db, 'evaluations'));
+      const evals: PointEvaluation[] = [];
+      snap.forEach(d => evals.push({ id: d.id, ...d.data() } as PointEvaluation));
+      return evals;
+    } catch (err) {
+      return [];
+    }
   },
 
-  submitEvaluation: async (evalData: any, actor: any) => { return { success: true, message: 'تم تسجيل التقييم بنجاح' }; },
-  reviewEvaluation: async (id: string, decision: 'APPROVED' | 'REJECTED', reviewNotes: string, actor: any) => { return { success: true }; },
-  correctEvaluation: async (id: string, newPoints: number, correctionReason: string, actor: any) => { return { success: true }; },
+  submitEvaluation: async (evalData: any, actor: any) => {
+    const payload = {
+      ...evalData,
+      evaluatorId: actor.id,
+      evaluatorName: actor.name,
+      evaluatorRole: actor.role,
+      status: evalData.type === 'POSITIVE' ? 'APPROVED' : 'PENDING',
+      createdAt: new Date().toISOString()
+    };
+    await addDoc(collection(db, 'evaluations'), payload);
+    return { success: true, message: 'تم تسجيل التقييم بنجاح' };
+  },
 
-  // Suspensions
-  getSuspensions: async () => { return []; },
-  createSuspensionRequest: async (requestData: any, actor: any) => { return { success: true }; },
-  decideSuspensionRequest: async (id: string, decision: 'APPROVED' | 'REJECTED', decisionNotes: string, approvedDuration: string, actor: any) => { return { success: true }; },
-
-  // Reports / Incidents
-  getIncidentReports: async () => { return []; },
-  submitIncidentReport: async (reportData: any, actor: any) => { return { success: true }; },
-  respondToIncidentReport: async (id: string, response: string, status: string, actor: any) => { return { success: true }; },
-
-  // Activities & Attendance
-  getActivities: async () => { return []; },
-  createActivity: async (activityData: any, actor: any) => { return { success: true }; },
-  recordAttendance: async (activityId: string, scoutAttendances: any[], actor: any) => { return { success: true }; },
-
-  // Badges
-  getBadges: async () => { return { badges: [], awarded: [] }; },
-  awardBadge: async (badgeId: string, scoutId: string, notes: string, actor: any) => { return { success: true }; },
-
-  // Certificates
-  getCertificates: async () => { return []; },
-  issueCertificate: async (certData: any, actor: any) => { return { success: true }; },
-
-  // Excel Import
-  importScouts: async (rows: any[], dryRun: boolean, actor: any) => { return { success: true, imported: rows.length }; },
-  importTeachers: async (rows: any[], dryRun: boolean, actor: any) => { return { success: true, imported: rows.length }; },
+  // Activities
+  getActivities: async () => {
+    try {
+      const snap = await getDocs(collection(db, 'activities'));
+      const acts: TroopActivity[] = [];
+      snap.forEach(d => acts.push({ id: d.id, ...d.data() } as TroopActivity));
+      return acts;
+    } catch (err) {
+      return [];
+    }
+  },
 
   // Notifications
-  getNotifications: async (userId: string) => { return []; },
-  markNotificationRead: async (notifId: string) => { return { success: true }; },
-  markAllNotificationsRead: async (userId: string) => { return { success: true }; },
+  getNotifications: async (userId: string) => {
+    try {
+      const q = query(collection(db, 'notifications'), where('recipientUserId', '==', userId));
+      const snap = await getDocs(q);
+      const notifs: AppNotification[] = [];
+      snap.forEach(d => notifs.push({ id: d.id, ...d.data() } as AppNotification));
+      return notifs;
+    } catch (err) {
+      return [];
+    }
+  },
 
-  // Parent Encouragement
-  sendParentEncouragement: async (parentId: string, parentName: string, scoutId: string, message: string) => {
+  markNotificationRead: async (notifId: string) => {
+    const ref = doc(db, 'notifications', notifId);
+    await updateDoc(ref, { isRead: true });
     return { success: true };
   },
+
+  markAllNotificationsRead: async (userId: string) => {
+    const q = query(collection(db, 'notifications'), where('recipientUserId', '==', userId));
+    const snap = await getDocs(q);
+    const promises = snap.docs.map(d => updateDoc(doc(db, 'notifications', d.id), { isRead: true }));
+    await Promise.all(promises);
+    return { success: true };
+  },
+
+  // Parent Encouragements
+  sendParentEncouragement: async (parentId: string, parentName: string, scoutId: string, message: string) => {
+    await addDoc(collection(db, 'parentEncouragements'), {
+      parentId,
+      parentName,
+      scoutId,
+      message,
+      createdAt: new Date().toISOString()
+    });
+    return { success: true };
+  },
+
   getParentEncouragements: async (scoutId: string) => {
-    return [
-      { id: 'pe1', parentId: 'parent_1', parentName: 'ولي أمر أحمد', scoutId, message: 'فخورون بك يا بطل!', createdAt: new Date().toISOString() }
-    ] as ParentEncouragement[];
+    try {
+      const q = query(collection(db, 'parentEncouragements'), where('scoutId', '==', scoutId));
+      const snap = await getDocs(q);
+      const msgs: ParentEncouragement[] = [];
+      snap.forEach(d => msgs.push({ id: d.id, ...d.data() } as ParentEncouragement));
+      return msgs;
+    } catch (err) {
+      return [];
+    }
   },
 
-  // Audit Logs
-  getAuditLogs: async () => { return []; },
-
-  // Settings & Reports Summary
-  getSettings: async () => { 
-    return { troopName: 'فرقة فتيان أحمد الفاتح الكشفية', schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين' } as SiteSettings; 
-  },
-  updateSettings: async (settings: Partial<SiteSettings>, actor: any) => { return { success: true }; },
-  getReportsSummary: async () => { return {}; },
-  restoreBackup: async (backupData: any, actor: any) => { return { success: true }; }
+  // Incident Reports
+  submitIncidentReport: async (reportData: any, actor: any) => {
+    await addDoc(collection(db, 'incidentReports'), {
+      ...reportData,
+      senderId: actor.id,
+      senderName: actor.name,
+      senderRole: actor.role,
+      status: 'جديد',
+      createdAt: new Date().toISOString()
+    });
+    return { success: true };
+  }
 };
