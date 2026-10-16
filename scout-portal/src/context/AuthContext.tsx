@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, ScoutProfile, TeacherProfile } from '../types';
-import { db } from './firebase';
+import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 interface AuthContextType {
