@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, ScoutProfile, TeacherProfile } from '../types';
-import { db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +16,24 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// قائمة المستخدمين الافتراضية (يمكنك إضافة مئات الكشافين والمعلمين هنا بسهولة تامة)
+const MOCK_USERS: any[] = [
+  { id: 'admin_1', username: 'admin', password: 'password', role: 'ADMIN', name: 'مدير النظام', isActive: true },
+  { id: 'scout_1', username: 'scout_ahmed', password: 'password', role: 'SCOUT', scoutId: 's1', name: 'أحمد (كشاف)', isActive: true },
+  { id: 'teacher_1', username: 'teacher_salman', password: 'password', role: 'TEACHER', name: 'أ. سلمان (معلم)', isActive: true },
+  { id: 'parent_1', username: 'parent_ahmed', password: 'password', role: 'PARENT', linkedScoutIds: ['s1'], name: 'ولي أمر أحمد', isActive: true },
+  // يمكنك إضافة بقية الـ 150 كشافاً ومعلماً هنا بنفس النمط بكل سهولة:
+  // { id: 'scout_2', username: 'scout_mohamed', password: 'password', role: 'SCOUT', scoutId: 's2', name: 'محمد', isActive: true },
+];
+
+const MOCK_SCOUTS: ScoutProfile[] = [
+  { id: 's1', name: 'أحمد محمد', troop: 'فرقة فتيان أحمد الفاتح', level: 'متقدم' }
+];
+
+const MOCK_TEACHERS: TeacherProfile[] = [
+  { id: 't1', userId: 'teacher_1', name: 'أ. سلمان', subject: 'كشافة' }
+];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -52,56 +68,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('username', '==', username.trim()));
-      const querySnapshot = await getDocs(q);
+      // البحث في القائمة المحلية (يمكن تعديلها أو توسيعها لتشمل 150+ مستخدم بسهولة)
+      const trimmedUser = username.trim();
+      const foundUser = MOCK_USERS.find(u => u.username === trimmedUser);
 
-      if (querySnapshot.empty) {
+      if (!foundUser) {
         throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
       }
 
-      let foundUser: any = null;
-      querySnapshot.forEach((doc) => {
-        foundUser = { id: doc.id, ...doc.data() };
-      });
-
-      if (!foundUser || !foundUser.isActive) {
+      if (!foundUser.isActive) {
         throw new Error('هذا الحساب معطل أو غير موجود');
       }
 
       let foundScoutProfile = null;
       if (foundUser.role === 'SCOUT' && foundUser.scoutId) {
-        const scoutsRef = collection(db, 'scouts');
-        const scoutSnap = await getDocs(scoutsRef);
-        scoutSnap.forEach((d) => {
-          if (d.id === foundUser.scoutId) {
-            foundScoutProfile = { id: d.id, ...d.data() };
-          }
-        });
+        foundScoutProfile = MOCK_SCOUTS.find(s => s.id === foundUser.scoutId) || null;
       }
 
       let foundLinkedScouts: ScoutProfile[] = [];
       if (foundUser.role === 'PARENT' && foundUser.linkedScoutIds) {
-        const scoutsRef = collection(db, 'scouts');
-        const scoutSnap = await getDocs(scoutsRef);
-        scoutSnap.forEach((d) => {
-          const sData = { id: d.id, ...d.data() } as ScoutProfile;
-          if (foundUser.linkedScoutIds.includes(sData.id)) {
-            foundLinkedScouts.push(sData);
-          }
-        });
+        foundLinkedScouts = MOCK_SCOUTS.filter(s => foundUser.linkedScoutIds.includes(s.id));
       }
 
       let foundTeacherProfile = null;
       if (foundUser.role === 'TEACHER') {
-        const teachersRef = collection(db, 'teachers');
-        const tSnap = await getDocs(teachersRef);
-        tSnap.forEach((d) => {
-          const tData: any = d.data();
-          if (tData.userId === foundUser.id) {
-            foundTeacherProfile = { id: d.id, ...tData };
-          }
-        });
+        foundTeacherProfile = MOCK_TEACHERS.find(t => t.userId === foundUser.id) || null;
       }
 
       const sessionToken = `session_${foundUser.id}_${Date.now()}`;
