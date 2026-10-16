@@ -37,16 +37,18 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
     try {
       setLoading(true);
       const data = await api.getScoutDetails(id);
-      setScout(data.scout);
-      setEvaluations(data.evaluations || []);
-      setBadges(data.badges || []);
-      setCertificates(data.certificates || []);
+      if (data) {
+        setScout(data.scout || null);
+        setEvaluations(data.evaluations || []);
+        setBadges(data.badges || []);
+        setCertificates(data.certificates || []);
+      }
       
       const allActs = await api.getActivities();
-      setActivities(allActs);
+      setActivities(allActs || []);
 
       const parentMsgs = await api.getParentEncouragements(id);
-      setParentEncouragements(parentMsgs);
+      setParentEncouragements(parentMsgs || []);
     } catch (err) {
       console.error('Failed loading scout details:', err);
     } finally {
@@ -81,7 +83,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
     try {
       setUploadLoading(true);
       const res = await api.uploadScoutAvatar(scout.id, previewImage);
-      setUploadMessage({ text: res.message || 'تم إرسال الصورة بنجاح وتنتظر اعتماد القائد', error: false });
+      setUploadMessage({ text: res?.message || 'تم إرسال الصورة بنجاح وتنتظر اعتماد القائد', error: false });
       await refreshUser();
       if (scout) loadScoutDetails(scout.id);
       setTimeout(() => setShowPhotoModal(false), 2000);
@@ -105,10 +107,10 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
             <div className="relative">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-amber-400/80 p-1 bg-white/10 overflow-hidden shadow-2xl flex items-center justify-center">
                 {scout?.avatarUrl && scout.avatarStatus === 'APPROVED' ? (
-                  <img src={scout.avatarUrl} alt={scout.fullName} className="w-full h-full object-cover rounded-2xl" />
+                  <img src={scout.avatarUrl} alt={scout?.fullName || 'كشاف'} className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <div className="text-3xl font-black text-amber-300">
-                    {scout?.fullName.charAt(0)}
+                    {scout?.fullName ? scout.fullName.charAt(0) : 'ك'}
                   </div>
                 )}
               </div>
@@ -134,11 +136,11 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
             <div className="space-y-1">
               <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-bold text-amber-300">
                 <Shield className="w-4 h-4" />
-                <span>{scout?.patrolName || 'طليعة الفاتح'} • {scout?.grade} ({scout?.section})</span>
+                <span>{scout?.patrolName || 'طليعة الفاتح'} • {scout?.grade || 'الإعدادية'} ({scout?.section || 'متوسط'})</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black">{scout?.fullName}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black">{scout?.fullName || 'الكشاف'}</h1>
               <p className="text-xs text-emerald-200">
-                الرقم الشخصي: {scout?.nationalId} • سنة التسجيل: {scout?.registrationYear}
+                الرقم الشخصي: {scout?.nationalId || 'غير متوفر'} • سنة التسجيل: {scout?.registrationYear || '2026'}
               </p>
             </div>
           </div>
@@ -250,7 +252,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                 <div key={msg.id} className="p-3 bg-white rounded-2xl border border-purple-100 text-xs text-purple-950 shadow-xs">
                   <p className="font-semibold text-slate-800">«{msg.message}»</p>
                   <span className="text-[10px] text-purple-600 mt-1 block">
-                    — {msg.parentName} • {new Date(msg.createdAt).toLocaleDateString('ar-BH')}
+                    — {msg.parentName} • {msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('ar-BH') : ''}
                   </span>
                 </div>
               ))}
@@ -310,7 +312,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                         <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-2">
                           <span>المقيم: {ev.evaluatorName}</span>
                           <span>•</span>
-                          <span>{new Date(ev.createdAt).toLocaleDateString('ar-BH')}</span>
+                          <span>{ev.createdAt ? new Date(ev.createdAt).toLocaleDateString('ar-BH') : ''}</span>
                         </div>
                       </div>
 
@@ -371,7 +373,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                       <h4 className="font-bold text-xs text-amber-950">{b.badgeTitle}</h4>
                       <p className="text-[10px] text-amber-800 line-clamp-1">{b.notes || b.badgeCategory}</p>
                       <span className="text-[9px] text-slate-400 block mt-0.5">
-                        {new Date(b.awardedAt).toLocaleDateString('ar-BH')}
+                        {b.awardedAt ? new Date(b.awardedAt).toLocaleDateString('ar-BH') : ''}
                       </span>
                     </div>
                   </div>
@@ -431,7 +433,6 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
               <button onClick={() => setShowPhotoModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
-            {/* Verbatim Mandatory Instructions */}
             <div className="p-4 bg-emerald-50 border-r-4 border-emerald-600 rounded-2xl text-xs text-emerald-950 space-y-2 leading-relaxed">
               <p className="font-bold flex items-center gap-1.5 text-emerald-900">
                 <Info className="w-4 h-4 text-emerald-700" />
@@ -450,7 +451,6 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
               </div>
             )}
 
-            {/* File Input & Preview */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-slate-700">اختر صورة واضحة من جهازك</label>
               <input
@@ -475,7 +475,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                 type="button"
                 onClick={handleUploadSubmit}
                 disabled={!previewImage || uploadLoading}
-                className="flex-1 py-3 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-colors"
+                flex-1 py-3 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-colors
               >
                 {uploadLoading ? 'جارٍ الرفع...' : 'إرسال الصورة للاعتماد'}
               </button>
