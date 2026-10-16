@@ -27,8 +27,23 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
   if (!isOpen) return null;
 
+  // توليد وتنزيل القالب محلياً لمنع أخطاء 404 على Vercel
   const handleDownloadTemplate = () => {
-    window.location.href = `/api/import/template/${type}`;
+    let templateData = [];
+    if (type === 'scouts') {
+      templateData = [
+        { fullName: 'أحمد محمد علي', nationalId: '097312345', grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح', parentName: 'محمد علي', parentPhone: '39000000' }
+      ];
+    } else {
+      templateData = [
+        { fullName: 'أ. سلمان عبد الله', employeeId: 'EMP102', subject: 'كشافة', assignedClasses: 'الأول إعدادي - 1, الأول إعدادي - 2' }
+      ];
+    }
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, type === 'scouts' ? 'الكشافون' : 'المعلمون');
+    XLSX.writeFile(wb, `template_${type}_ahmed_alfateh.xlsx`);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +71,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
         setParsedRows(data);
 
-        // Perform instant dry-run validation on server
+        // Perform instant dry-run validation on server/api
         setLoading(true);
         if (type === 'scouts') {
           const res = await api.importScouts(data, true, actor);
@@ -214,7 +229,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
             <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
             <h4 className="font-bold text-emerald-950 text-base">تمت عملية الاستيراد بنجاح!</h4>
             <p className="text-xs text-emerald-800">
-              تمت إضافة <strong>{importResult.addedCount}</strong> سجل جديد إلى قاعدة بيانات الفرقة.
+              تمت إضافة <strong>{importResult.addedCount || importResult.imported}</strong> سجل جديد إلى قاعدة بيانات الفرقة.
             </p>
             <button
               onClick={onClose}
