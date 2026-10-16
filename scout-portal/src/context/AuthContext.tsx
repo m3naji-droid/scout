@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// قائمة المستخدمين الآمنة (يمكنك إضافة مئات الكشافين والمعلمين هنا بكل إنسيابية)
+// قائمة المستخدمين الآمنة والمتكاملة (يمكنك إضافة مئات الكشافين والمعلمين هنا بكل إنسيابية)
 const MOCK_USERS: any[] = [
   { id: 'admin_1', username: 'admin', password: 'password', role: 'ADMIN', name: 'مدير النظام', isActive: true },
   { id: 'scout_1', username: 'scout_ahmed', password: 'password', role: 'SCOUT', scoutId: 's1', name: 'أحمد (كشاف)', isActive: true },
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setScoutProfile(parsed.scoutProfile || null);
           setLinkedScouts(parsed.linkedScouts || []);
           if (parsed.linkedScouts && parsed.linkedScouts.length > 0) {
-            setSelectedLinkedScoutId(parsed.linkedScouts[0].id || '');
+            setSelectedLinkedScoutId(parsed.linkedScouts[0]?.id || '');
           }
           setTeacherProfile(parsed.teacherProfile || null);
         }
@@ -86,13 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       let foundLinkedScouts: ScoutProfile[] = [];
-      if (foundUser.role === 'PARENT' && foundUser.linkedScoutIds) {
-        foundLinkedScouts = MOCK_SCOUTS.filter(s => foundUser.linkedScoutIds.includes(s.id));
+      if (foundUser.role === 'PARENT') {
+        const ids = foundUser.linkedScoutIds || ['s1'];
+        foundLinkedScouts = MOCK_SCOUTS.filter(s => ids.includes(s.id));
+        if (foundLinkedScouts.length === 0) {
+          foundLinkedScouts = [MOCK_SCOUTS[0]]; // ضمان عدم إرجاع مصفوفة فارغة تسبب انهيار ولي الأمر
+        }
       }
 
       let foundTeacherProfile = null;
       if (foundUser.role === 'TEACHER') {
-        foundTeacherProfile = MOCK_TEACHERS.find(t => t.userId === foundUser.id) || null;
+        foundTeacherProfile = MOCK_TEACHERS.find(t => t.userId === foundUser.id) || MOCK_TEACHERS[0] || null;
       }
 
       const sessionToken = `session_${foundUser.id}_${Date.now()}`;
