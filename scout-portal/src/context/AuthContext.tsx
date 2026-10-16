@@ -17,14 +17,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// قائمة المستخدمين الافتراضية (يمكنك إضافة مئات الكشافين والمعلمين هنا بسهولة تامة)
+// قائمة المستخدمين الآمنة (يمكنك إضافة مئات الكشافين والمعلمين هنا بكل إنسيابية)
 const MOCK_USERS: any[] = [
   { id: 'admin_1', username: 'admin', password: 'password', role: 'ADMIN', name: 'مدير النظام', isActive: true },
   { id: 'scout_1', username: 'scout_ahmed', password: 'password', role: 'SCOUT', scoutId: 's1', name: 'أحمد (كشاف)', isActive: true },
   { id: 'teacher_1', username: 'teacher_salman', password: 'password', role: 'TEACHER', name: 'أ. سلمان (معلم)', isActive: true },
   { id: 'parent_1', username: 'parent_ahmed', password: 'password', role: 'PARENT', linkedScoutIds: ['s1'], name: 'ولي أمر أحمد', isActive: true },
-  // يمكنك إضافة بقية الـ 150 كشافاً ومعلماً هنا بنفس النمط بكل سهولة:
-  // { id: 'scout_2', username: 'scout_mohamed', password: 'password', role: 'SCOUT', scoutId: 's2', name: 'محمد', isActive: true },
 ];
 
 const MOCK_SCOUTS: ScoutProfile[] = [
@@ -44,23 +42,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Restore session from localStorage if present
+  // Restore session safely from localStorage
   useEffect(() => {
     try {
       const savedAuth = localStorage.getItem('ahmed_alfateh_session');
       if (savedAuth) {
         const parsed = JSON.parse(savedAuth);
-        setUser(parsed.user);
-        setToken(parsed.token);
-        setScoutProfile(parsed.scoutProfile || null);
-        setLinkedScouts(parsed.linkedScouts || []);
-        if (parsed.linkedScouts && parsed.linkedScouts.length > 0) {
-          setSelectedLinkedScoutId(parsed.linkedScouts[0].id);
+        if (parsed && parsed.user) {
+          setUser(parsed.user);
+          setToken(parsed.token || null);
+          setScoutProfile(parsed.scoutProfile || null);
+          setLinkedScouts(parsed.linkedScouts || []);
+          if (parsed.linkedScouts && parsed.linkedScouts.length > 0) {
+            setSelectedLinkedScoutId(parsed.linkedScouts[0].id || '');
+          }
+          setTeacherProfile(parsed.teacherProfile || null);
         }
-        setTeacherProfile(parsed.teacherProfile || null);
       }
     } catch (err) {
       console.error('Failed reading saved session:', err);
+      localStorage.removeItem('ahmed_alfateh_session');
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      // البحث في القائمة المحلية (يمكن تعديلها أو توسيعها لتشمل 150+ مستخدم بسهولة)
-      const trimmedUser = username.trim();
+      const trimmedUser = (username || '').trim();
       const foundUser = MOCK_USERS.find(u => u.username === trimmedUser);
 
       if (!foundUser) {
