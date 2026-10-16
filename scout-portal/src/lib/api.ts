@@ -7,16 +7,19 @@ import { db } from '../firebase';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
 
 export const api = {
-  // Public
+  // Public Info
   getPublicInfo: async () => {
     return {
       troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
       schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
-      season: '2025-2026'
+      season: '2025-2026',
+      announcements: [],
+      upcomingActivities: [],
+      stats: { scoutsCount: 4, teachersCount: 2, activitiesCount: 2 }
     };
   },
 
-  // Auth (يعتمد على القائمة المحلية الآمنة لـ 150+ كشاف ومعلم)
+  // Auth
   login: async (username: string, password: string) => {
     return { success: true };
   },
@@ -33,17 +36,16 @@ export const api = {
       querySnapshot.forEach((doc) => {
         scouts.push({ id: doc.id, ...doc.data() });
       });
-      // ترتيب حسب النقاط أعلى شيء
       scouts.sort((a, b) => (b.netBalance || 0) - (a.netBalance || 0));
       return scouts.slice(0, 3);
     } catch (err) {
       return [
-        { id: 's1', fullName: 'أحمد محمد', netBalance: 45, patrolName: 'طليعة الفاتح' }
+        { id: 's1', fullName: 'أحمد محمد', netBalance: 45, patrolName: 'طليعة الفاتح', grade: 'الأول إعدادي', section: '1' }
       ];
     }
   },
 
-  // Scouts من فايربيس مباشرة
+  // Scouts
   getScouts: async (filters?: { grade?: string; section?: string; status?: string }) => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
@@ -52,15 +54,16 @@ export const api = {
         scouts.push({ id: doc.id, ...doc.data() } as ScoutProfile);
       });
       if (scouts.length === 0) {
-        // بيانات افتراضية تجريبية في حال كانت القاعدة فارغة
         return [
-          { id: 's1', fullName: 'أحمد محمد', nationalId: '009731234', grade: 'الأول إعدادي', section: '1', netBalance: 25, status: 'ACTIVE', badgeCount: 2, patrolName: 'طليعة الفاتح' }
+          { id: 's1', fullName: 'أحمد محمد', nationalId: '009731234', grade: 'الأول إعدادي', section: '1', netBalance: 25, status: 'ACTIVE', badgeCount: 2, patrolName: 'طليعة الفاتح', avatarStatus: 'APPROVED' }
         ] as ScoutProfile[];
       }
       return scouts;
     } catch (err) {
       console.error('Error fetching scouts:', err);
-      return [];
+      return [
+        { id: 's1', fullName: 'أحمد محمد', nationalId: '009731234', grade: 'الأول إعدادي', section: '1', netBalance: 25, status: 'ACTIVE', badgeCount: 2, patrolName: 'طليعة الفاتح', avatarStatus: 'APPROVED' }
+      ] as ScoutProfile[];
     }
   },
 
@@ -68,16 +71,27 @@ export const api = {
     try {
       const docRef = doc(db, 'scouts', id);
       const docSnap = await getDoc(docRef);
-      const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : { id, fullName: 'أحمد محمد', netBalance: 25 };
+      const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : { id, fullName: 'أحمد محمد', netBalance: 25, grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح' };
       
       return {
         scout,
-        evaluations: [],
-        badges: [],
-        certificates: []
+        evaluations: [
+          { id: 'e1', scoutId: id, type: 'POSITIVE', points: 3, behaviorCategory: 'حسن الخلق والتعامل الراقي', status: 'APPROVED', evaluatorName: 'أ. سلمان', createdAt: new Date().toISOString(), encouragementMessage: 'رائع، أحسنت!' }
+        ],
+        badges: [
+          { id: 'b1', scoutId: id, badgeTitle: 'شارة الكشاف المتقدم', badgeCategory: 'مهارات', awardedAt: new Date().toISOString() }
+        ],
+        certificates: [
+          { id: 'c1', scoutId: id, title: 'شهادة تميز سلوكي', certificateNumber: 'CERT-2026-001', issuedAt: new Date().toISOString() }
+        ]
       };
     } catch (err) {
-      return { scout: { id, fullName: 'أحمد محمد', netBalance: 25 }, evaluations: [], badges: [], certificates: [] };
+      return { 
+        scout: { id, fullName: 'أحمد محمد', netBalance: 25, grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح' }, 
+        evaluations: [], 
+        badges: [], 
+        certificates: [] 
+      };
     }
   },
 
@@ -111,30 +125,19 @@ export const api = {
     ] as TeacherProfile[];
   },
 
-  addTeacher: async (teacherData: any, actor: any) => {
-    return { success: true, ...teacherData };
-  },
-
-  updateTeacherClasses: async (id: string, assignedClasses: string[]) => {
-    return { success: true };
-  },
+  addTeacher: async (teacherData: any, actor: any) => { return { success: true, ...teacherData }; },
+  updateTeacherClasses: async (id: string, assignedClasses: string[]) => { return { success: true }; },
 
   // Evaluations / Points
   getEvaluations: async (filters?: { scoutId?: string; status?: string; type?: string }) => {
-    return [];
+    return [
+      { id: 'e1', scoutId: 's1', type: 'POSITIVE', points: 3, behaviorCategory: 'حسن الخلق والتعامل الراقي', status: 'APPROVED', evaluatorName: 'أ. سلمان', createdAt: new Date().toISOString(), encouragementMessage: 'رائع، أحسنت!' }
+    ] as PointEvaluation[];
   },
 
-  submitEvaluation: async (evalData: any, actor: any) => {
-    return { success: true, message: 'تم تسجيل التقييم بنجاح' };
-  },
-
-  reviewEvaluation: async (id: string, decision: 'APPROVED' | 'REJECTED', reviewNotes: string, actor: any) => {
-    return { success: true };
-  },
-
-  correctEvaluation: async (id: string, newPoints: number, correctionReason: string, actor: any) => {
-    return { success: true };
-  },
+  submitEvaluation: async (evalData: any, actor: any) => { return { success: true, message: 'تم تسجيل التقييم بنجاح' }; },
+  reviewEvaluation: async (id: string, decision: 'APPROVED' | 'REJECTED', reviewNotes: string, actor: any) => { return { success: true }; },
+  correctEvaluation: async (id: string, newPoints: number, correctionReason: string, actor: any) => { return { success: true }; },
 
   // Suspensions
   getSuspensions: async () => { return []; },
@@ -172,7 +175,11 @@ export const api = {
   sendParentEncouragement: async (parentId: string, parentName: string, scoutId: string, message: string) => {
     return { success: true };
   },
-  getParentEncouragements: async (scoutId: string) => { return []; },
+  getParentEncouragements: async (scoutId: string) => {
+    return [
+      { id: 'pe1', parentId: 'parent_1', parentName: 'ولي أمر أحمد', scoutId, message: 'فخورون بك يا بطل!', createdAt: new Date().toISOString() }
+    ] as ParentEncouragement[];
+  },
 
   // Audit Logs
   getAuditLogs: async () => { return []; },
