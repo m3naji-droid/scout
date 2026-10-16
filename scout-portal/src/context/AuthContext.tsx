@@ -17,21 +17,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// قائمة المستخدمين الآمنة والمتكاملة (يمكنك إضافة مئات الكشافين والمعلمين هنا بكل إنسيابية)
+// قائمة القادة المعتمدين والمصرح لهم بإدارة الفرقة وإضافة باقي الفئات
 const MOCK_USERS: any[] = [
-  { id: 'admin_1', username: 'admin', password: 'password', role: 'ADMIN', name: 'مدير النظام', isActive: true },
-  { id: 'scout_1', username: 'scout_ahmed', password: 'password', role: 'SCOUT', scoutId: 's1', name: 'أحمد (كشاف)', isActive: true },
-  { id: 'teacher_1', username: 'teacher_salman', password: 'password', role: 'TEACHER', name: 'أ. سلمان (معلم)', isActive: true },
-  { id: 'parent_1', username: 'parent_ahmed', password: 'password', role: 'PARENT', linkedScoutIds: ['s1'], name: 'ولي أمر أحمد', isActive: true },
+  { id: 'leader_basel', username: 'باسل', password: '1234', role: 'LEADER', name: 'القائد باسل حسن', isActive: true },
+  { id: 'leader_mohammed', username: 'محمد', password: '5678', role: 'LEADER', name: 'القائد محمد علي', isActive: true },
 ];
 
-const MOCK_SCOUTS: ScoutProfile[] = [
-  { id: 's1', name: 'أحمد محمد', troop: 'فرقة فتيان أحمد الفاتح', level: 'متقدم' }
-];
-
-const MOCK_TEACHERS: TeacherProfile[] = [
-  { id: 't1', userId: 'teacher_1', name: 'أ. سلمان', subject: 'كشافة' }
-];
+const MOCK_SCOUTS: ScoutProfile[] = [];
+const MOCK_TEACHERS: TeacherProfile[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -70,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     try {
       const trimmedUser = (username || '').trim();
-      const foundUser = MOCK_USERS.find(u => u.username === trimmedUser);
+      const foundUser = MOCK_USERS.find(u => u.username === trimmedUser && u.password === password);
 
       if (!foundUser) {
         throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
@@ -80,42 +73,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('هذا الحساب معطل أو غير موجود');
       }
 
-      let foundScoutProfile = null;
-      if (foundUser.role === 'SCOUT' && foundUser.scoutId) {
-        foundScoutProfile = MOCK_SCOUTS.find(s => s.id === foundUser.scoutId) || null;
-      }
-
-      let foundLinkedScouts: ScoutProfile[] = [];
-      if (foundUser.role === 'PARENT') {
-        const ids = foundUser.linkedScoutIds || ['s1'];
-        foundLinkedScouts = MOCK_SCOUTS.filter(s => ids.includes(s.id));
-        if (foundLinkedScouts.length === 0) {
-          foundLinkedScouts = [MOCK_SCOUTS[0]]; // ضمان عدم إرجاع مصفوفة فارغة تسبب انهيار ولي الأمر
-        }
-      }
-
-      let foundTeacherProfile = null;
-      if (foundUser.role === 'TEACHER') {
-        foundTeacherProfile = MOCK_TEACHERS.find(t => t.userId === foundUser.id) || MOCK_TEACHERS[0] || null;
-      }
-
       const sessionToken = `session_${foundUser.id}_${Date.now()}`;
       
       setUser(foundUser);
       setToken(sessionToken);
-      setScoutProfile(foundScoutProfile);
-      setLinkedScouts(foundLinkedScouts);
-      if (foundLinkedScouts.length > 0) {
-        setSelectedLinkedScoutId(foundLinkedScouts[0].id);
-      }
-      setTeacherProfile(foundTeacherProfile);
+      setScoutProfile(null);
+      setLinkedScouts([]);
+      setSelectedLinkedScoutId('');
+      setTeacherProfile(null);
 
       localStorage.setItem('ahmed_alfateh_session', JSON.stringify({
         user: foundUser,
         token: sessionToken,
-        scoutProfile: foundScoutProfile,
-        linkedScouts: foundLinkedScouts,
-        teacherProfile: foundTeacherProfile
+        scoutProfile: null,
+        linkedScouts: [],
+        teacherProfile: null
       }));
 
     } catch (err: any) {
