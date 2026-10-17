@@ -157,7 +157,7 @@ export const api = {
     return { success: true };
   },
 
-  // Teachers Management (تمت إضافة addTeacher لتلافي الخطأ)
+  // Teachers Management
   getTeachers: async () => {
     try {
       const snap = await getDocs(collection(db, 'teachers'));
@@ -171,7 +171,6 @@ export const api = {
 
   addTeacher: async (teacherData: { fullName: string, employeeId: string, subject: string, assignedClasses?: string[] }) => {
     try {
-      // 1. إضافة المعلم إلى مجموعة teachers
       const teacherRef = await addDoc(collection(db, 'teachers'), {
         fullName: teacherData.fullName,
         employeeId: teacherData.employeeId,
@@ -182,12 +181,11 @@ export const api = {
         createdAt: new Date().toISOString()
       });
 
-      // 2. إنشاء حساب دخول خاص به في مجموعة users تلقائياً
       await addDoc(collection(db, 'users'), {
-        username: teacherData.employeeId, // استخدام الرقم الوظيفي كاسم مستخدم افتراضي
+        username: teacherData.employeeId,
         fullName: teacherData.fullName,
         role: 'TEACHER',
-        password: 'password123', // كلمة مرور افتراضية يمكنه تغييرها لاحقاً
+        password: 'password123',
         isActive: true,
         createdAt: new Date().toISOString()
       });
@@ -282,6 +280,18 @@ export const api = {
     };
     await addDoc(collection(db, 'evaluations'), payload);
     return { success: true, message: 'تم تسجيل التقييم بنجاح' };
+  },
+
+  // Suspensions (طلبات الحرمان والتوقيف - لتلافي الخطأ الظاهر)
+  getSuspensions: async () => {
+    try {
+      const snap = await getDocs(collection(db, 'suspensionRequests'));
+      const requests: SuspensionRequest[] = [];
+      snap.forEach(d => requests.push({ id: d.id, ...d.data() } as SuspensionRequest));
+      return requests;
+    } catch (err) {
+      return [];
+    }
   },
 
   // Activities
