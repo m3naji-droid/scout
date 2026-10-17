@@ -66,7 +66,12 @@ export const api = {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
       const scouts: any[] = [];
       querySnapshot.forEach((doc) => {
-        scouts.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        scouts.push({ 
+          id: doc.id, 
+          ...data,
+          name: data.fullName || data.name 
+        });
       });
       scouts.sort((a, b) => (b.netBalance || 0) - (a.netBalance || 0));
       return {
@@ -79,13 +84,19 @@ export const api = {
     }
   },
 
-  // Scouts Management (الاسم، الرقم الشخصي، والصف)
+  // Scouts Management (مع التوافق التام بين fullName و name)
   getScouts: async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
       const scouts: ScoutProfile[] = [];
-      querySnapshot.forEach((doc) => {
-        scouts.push({ id: doc.id, ...doc.data() } as ScoutProfile);
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        scouts.push({ 
+          id: docSnap.id, 
+          ...data,
+          fullName: data.fullName || data.name,
+          name: data.name || data.fullName 
+        } as ScoutProfile);
       });
       return scouts;
     } catch (err) {
@@ -98,7 +109,13 @@ export const api = {
     try {
       const docRef = doc(db, 'scouts', id);
       const docSnap = await getDoc(docRef);
-      const scout = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+      const rawData = docSnap.exists() ? docSnap.data() : null;
+      const scout = rawData ? { 
+        id: docSnap.id, 
+        ...rawData,
+        fullName: rawData.fullName || rawData.name,
+        name: rawData.name || rawData.fullName 
+      } : null;
       
       const evalsQuery = query(collection(db, 'evaluations'), where('scoutId', '==', id));
       const evalsSnap = await getDocs(evalsQuery);
@@ -126,6 +143,7 @@ export const api = {
     try {
       const scoutRef = await addDoc(collection(db, 'scouts'), {
         fullName: scoutData.fullName,
+        name: scoutData.fullName, // حفظ الاثنين لضمان التوافق المطلق
         nationalId: scoutData.nationalId,
         grade: scoutData.grade,
         totalPositivePoints: 0,
@@ -139,10 +157,10 @@ export const api = {
         avatarUrl: ''
       });
 
-      // إنشاء حساب دخول تلقائي للكشاف باستخدام الرقم الشخصي
       await addDoc(collection(db, 'users'), {
         username: scoutData.nationalId,
         fullName: scoutData.fullName,
+        name: scoutData.fullName,
         role: 'SCOUT',
         scoutId: scoutRef.id,
         isActive: true,
@@ -161,14 +179,23 @@ export const api = {
     return { success: true };
   },
 
-  // Teachers Management (الاسم ورقم الترتيب / الوظيفي)
+  // Teachers Management (مع توفير name و fullName معاً لتلافي أي مشكلة عرض)
   getTeachers: async () => {
     try {
       const snap = await getDocs(collection(db, 'teachers'));
       const teachers: TeacherProfile[] = [];
-      snap.forEach(d => teachers.push({ id: d.id, ...d.data() } as TeacherProfile));
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        teachers.push({ 
+          id: docSnap.id, 
+          ...data,
+          fullName: data.fullName || data.name,
+          name: data.name || data.fullName 
+        } as TeacherProfile);
+      });
       return teachers;
     } catch (err) {
+      console.error('Error fetching teachers:', err);
       return [];
     }
   },
@@ -177,17 +204,18 @@ export const api = {
     try {
       const teacherRef = await addDoc(collection(db, 'teachers'), {
         fullName: teacherData.fullName,
-        employeeId: teacherData.employeeId, // رقم الترتيب / الرقم الوظيفي
+        name: teacherData.fullName, // حفظ الاثنين لضمان الظهور في الجدول
+        employeeId: teacherData.employeeId,
         subject: 'عام',
         evaluationsGivenCount: 0,
         status: 'ACTIVE',
         createdAt: new Date().toISOString()
       });
 
-      // إنشاء حساب دخول تلقائي للمعلم باستخدام رقم الترتيب
       await addDoc(collection(db, 'users'), {
         username: teacherData.employeeId,
         fullName: teacherData.fullName,
+        name: teacherData.fullName,
         role: 'TEACHER',
         isActive: true,
         createdAt: new Date().toISOString()
@@ -204,6 +232,7 @@ export const api = {
       const userRef = await addDoc(collection(db, 'users'), {
         username: userData.username,
         fullName: userData.fullName,
+        name: userData.fullName,
         role: userData.role,
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -214,6 +243,7 @@ export const api = {
         await addDoc(collection(db, 'teachers'), {
           userId: userRef.id,
           fullName: userData.fullName,
+          name: userData.fullName,
           employeeId: userData.employeeId || userData.username,
           evaluationsGivenCount: 0,
           status: 'ACTIVE'
@@ -232,6 +262,7 @@ export const api = {
       await addDoc(collection(db, 'users'), {
         username: parentData.username,
         fullName: parentData.fullName,
+        name: parentData.fullName,
         role: 'PARENT',
         phoneNumber: parentData.phoneNumber || '',
         linkedScoutIds: [parentData.linkedScoutId],
