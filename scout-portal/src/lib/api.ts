@@ -3,7 +3,7 @@ import {
   IncidentReport, TroopActivity, ScoutBadge, Certificate, AuditLogItem, SiteSettings 
 } from '../types';
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 export const api = {
   // Public Info & Stats
@@ -45,7 +45,7 @@ export const api = {
     }
   },
 
-  // ==================== SCOUTS MANAGEMENT (قاعدة البيانات مباشرة) ====================
+  // ==================== SCOUTS MANAGEMENT ====================
   getScouts: async () => {
     try {
       const snap = await getDocs(collection(db, 'scouts'));
@@ -70,7 +70,6 @@ export const api = {
     }
   },
 
-  // إضافة كشاف فردي مع توزيع الصفوف والشعبة والرقّم الشخصي
   addScout: async (scoutData: { fullName: string, nationalId: string, grade: string, section?: string, patrolName?: string, parentName?: string, parentPhone?: string }, actor: any) => {
     try {
       const scoutRef = await addDoc(collection(db, 'scouts'), {
@@ -94,22 +93,14 @@ export const api = {
         createdAt: new Date().toISOString()
       });
 
-      // إنشاء حساب دخول للكشاف برقمة الشخصي واسمه
       await addDoc(collection(db, 'users'), {
-        username: scoutData.fullName,
-        passwordHash: scoutData.nationalId,
+        username: scoutData.fullName.trim(),
+        passwordHash: String(scoutData.nationalId).trim(),
         fullName: scoutData.fullName,
         name: scoutData.fullName,
         role: 'SCOUT',
         scoutId: scoutRef.id,
         isActive: true,
-        createdAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'auditLogs'), {
-        action: 'ADD_SCOUT',
-        details: `أضاف القائد ${actor?.name || 'السيستم'} الكشاف ${scoutData.fullName}`,
-        actorName: actor?.name || 'القائد',
         createdAt: new Date().toISOString()
       });
 
@@ -119,41 +110,75 @@ export const api = {
     }
   },
 
-  // حذف كشاف فردي نهائياً من قاعدة البيانات
-  deleteScout: async (id: string, actor: any) => {
+  // الاستيراد الجماعي للكشافين (من ملف الأكسل دفعة واحدة)
+  importScoutsBulk: async (scoutsArray: Array<{ fullName: string, nationalId: string, grade?: string, section?: string }>, actor: any) => {
     try {
-      await deleteDoc(doc(db, 'scouts', id));
+      let count = 0;
+      for (const item of scoutsArray) {
+        if (!item.fullName || !item.nationalId) continue;
+        
+        const scoutRef = await addDoc(collection(db, 'scouts'), {
+          fullName: String(item.fullName).trim(),
+          name: String(item.fullName).trim(),
+          nationalId: String(item.nationalId).trim(),
+          grade: item.grade || 'الأول إعدادي',
+          section: item.section || '1',
+          patrolName: 'طليعة الفاتح',
+          totalPositivePoints: 0,
+          totalDeductions: 0,
+          netBalance: 0,
+          status: 'ACTIVE',
+          createdAt: new Date().toISOString()
+        });
+
+        // إنشاء حساب دخول برمجياً (الاسم اسم مستخدم، الرقم الشخصي كلمة سر)
+        await addDoc(collection(db, 'users'), {
+          username: String(item.fullName).trim(),
+          passwordHash: String(item.nationalId).trim(),
+          fullName: String(item.fullName).trim(),
+          name: String(item.fullName).trim(),
+          role: 'SCOUT',
+          scoutId: scoutRef.id,
+          isActive: true,
+          createdAt: new Date().toISOString()
+        });
+
+        count++;
+      }
+
       await addDoc(collection(db, 'auditLogs'), {
-        action: 'DELETE_SCOUT',
-        details: `حذف القائد ${actor?.name || 'السيستم'} الكشاف برقم معرف: ${id}`,
+        action: 'BULK_IMPORT_SCOUTS',
+        details: `استورد القائد ${actor?.name || 'السيستم'} عدد ${count} كشافاً دفعة واحدة`,
         actorName: actor?.name || 'القائد',
         createdAt: new Date().toISOString()
       });
-      return { success: true };
+
+      return { success: true, count };
     } catch (err: any) {
-      throw new Error('فشل حذف الكشاف: ' + err.message);
+      throw new Error('فشل استيراد الكشافين: ' + err.message);
     }
   },
 
-  // الحذف الجماعي للكشافين المحددين
+  deleteScout: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'scouts', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف: ' + err.message);
+    }
+  },
+
   deleteMultipleScouts: async (ids: string[], actor: any) => {
     try {
       for (const id of ids) {
         await deleteDoc(doc(db, 'scouts', id));
       }
-      await addDoc(collection(db, 'auditLogs'), {
-        action: 'DELETE_MULTIPLE_SCOUTS',
-        details: `حذف القائد ${actor?.name || 'السيستم'} دفعة كشافين بعدد: ${ids.length}`,
-        actorName: actor?.name || 'القائد',
-        createdAt: new Date().toISOString()
-      });
       return { success: true };
     } catch (err: any) {
-      throw new Error('فشل الحذف الجماعي للكشافين: ' + err.message);
+      throw new Error('فشل الحذف الجماعي: ' + err.message);
     }
   },
 
-  // إضافة نقاط للكشاف بواسطة القائد لتظهر فوراً
   addPointsToScout: async (scoutId: string, points: number, reason: string, actor: any) => {
     try {
       await addDoc(collection(db, 'evaluations'), {
@@ -165,13 +190,12 @@ export const api = {
         evaluatorName: actor?.name || 'القائد',
         createdAt: new Date().toISOString()
       });
-      return { success: true, message: 'تم إضافة النقاط بنجاح' };
+      return { success: true };
     } catch (err: any) {
       throw new Error('فشل إضافة النقاط: ' + err.message);
     }
   },
 
-  // منح شارة للكشاف بواسطة القائد لتظهر فوراً
   awardBadgeToScout: async (scoutId: string, badgeId: string, notes: string, actor: any) => {
     try {
       await addDoc(collection(db, 'awardedBadges'), {
@@ -181,7 +205,7 @@ export const api = {
         awardedBy: actor?.name || 'القائد',
         awardedAt: new Date().toISOString()
       });
-      return { success: true, message: 'تم منح الشارة بنجاح' };
+      return { success: true };
     } catch (err: any) {
       throw new Error('فشل منح الشارة: ' + err.message);
     }
@@ -208,20 +232,17 @@ export const api = {
       });
       return teachers;
     } catch (err) {
-      console.error('Error fetching teachers:', err);
       return [];
     }
   },
 
-  addTeacher: async (teacherData: { fullName: string, employeeId: string, subject?: string, assignedClasses?: string[] }, actor: any) => {
+  addTeacher: async (teacherData: { fullName: string, employeeId: string, subject?: string }, actor: any) => {
     try {
       const teacherRef = await addDoc(collection(db, 'teachers'), {
         fullName: teacherData.fullName,
         name: teacherData.fullName,
         employeeId: teacherData.employeeId,
         subject: teacherData.subject || 'العلوم العامة',
-        assignedClasses: teacherData.assignedClasses || ['الأول إعدادي - 1'],
-        evaluationsGivenCount: 0,
         status: 'ACTIVE',
         createdAt: new Date().toISOString()
       });
@@ -236,7 +257,7 @@ export const api = {
         createdAt: new Date().toISOString()
       });
 
-      return { id: teacherRef.id, success: true, message: 'تم إضافة المعلم بنجاح' };
+      return { id: teacherRef.id, success: true };
     } catch (err: any) {
       throw new Error('فشل إضافة المعلم: ' + err.message);
     }
@@ -247,7 +268,7 @@ export const api = {
       await deleteDoc(doc(db, 'teachers', id));
       return { success: true };
     } catch (err: any) {
-      throw new Error('فشل حذف المعلم: ' + err.message);
+      throw new Error('فشل الحذف: ' + err.message);
     }
   },
 
@@ -258,11 +279,10 @@ export const api = {
       }
       return { success: true };
     } catch (err: any) {
-      throw new Error('فشل الحذف الجماعي للمعلمين: ' + err.message);
+      throw new Error('فشل الحذف الجماعي: ' + err.message);
     }
   },
 
-  // ==================== EVALUATIONS & BADGES ====================
   getEvaluations: async () => {
     try {
       const snap = await getDocs(collection(db, 'evaluations'));
@@ -271,15 +291,6 @@ export const api = {
       return evals;
     } catch (err) {
       return [];
-    }
-  },
-
-  deleteEvaluation: async (id: string, actor: any) => {
-    try {
-      await deleteDoc(doc(db, 'evaluations', id));
-      return { success: true };
-    } catch (err: any) {
-      throw new Error('فشل حذف التقييم: ' + err.message);
     }
   },
 
@@ -301,19 +312,10 @@ export const api = {
     try {
       const snap = await getDocs(collection(db, 'activities'));
       const acts: TroopActivity[] = [];
-      snap.forEach(d => acts.push({ id: d.id, ...d.data() } as TroopActivity));
+      snap.forEach(d => acts.push({ id: d.id, ...d.data() } as ScoutActivity));
       return acts;
     } catch (err) {
       return [];
-    }
-  },
-
-  deleteActivity: async (id: string, actor: any) => {
-    try {
-      await deleteDoc(doc(db, 'activities', id));
-      return { success: true };
-    } catch (err: any) {
-      throw new Error('فشل الحذف: ' + err.message);
     }
   },
 
