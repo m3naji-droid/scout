@@ -229,7 +229,6 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Behavior & Feedback Timeline (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Pending Reviews Notice if any */}
           {pendingEvals.length > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-3xl p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -241,7 +240,6 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
             </div>
           )}
 
-          {/* Parent Encouragement Section */}
           {parentEncouragements.length > 0 && (
             <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-purple-200 rounded-3xl p-5 space-y-3">
               <div className="flex items-center gap-2 text-purple-900 font-bold text-sm">
@@ -316,7 +314,6 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                         </div>
                       </div>
 
-                      {/* Approval Status Badge */}
                       <div>
                         {ev.status === 'APPROVED' ? (
                           <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
@@ -475,7 +472,7 @@ export const ScoutDashboard: React.FC<ScoutDashboardProps> = ({ onOpenCertificat
                 type="button"
                 onClick={handleUploadSubmit}
                 disabled={!previewImage || uploadLoading}
-                flex-1 py-3 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-colors
+                className="flex-1 py-3 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-md transition-colors"
               >
                 {uploadLoading ? 'جارٍ الرفع...' : 'إرسال الصورة للاعتماد'}
               </button>
