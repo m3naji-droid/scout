@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, ScoutProfile, TeacherProfile } from '../types';
 import { db } from '../firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const trimmedUser = (username || '').trim();
       const trimmedPass = (password || '').trim();
 
-      // 1. التحقق الاستثنائي من القادة الثابتين (باسل / محمد) لضمان دخولهم دائماً
+      // 1. التحقق الاستثنائي من القادة الثابتين (باسل / محمد)
       if ((trimmedUser === 'باسل' && trimmedPass === '1234') || (trimmedUser === 'محمد' && trimmedPass === '5678')) {
         const leaderUser = {
           id: trimmedUser === 'باسل' ? 'leader_basel' : 'leader_mohammed',
@@ -74,26 +74,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // 2. البحث عن المستخدم في قاعدة بيانات Firebase (مجموعة users) للمعلمين والكشافين المضافين
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('username', '==', trimmedUser));
-      const querySnap = await getDocs(q);
+      // 2. جلب كافة المستخدمين من قاعدة بيانات Firebase والبحث بمرونة تامة
+      const usersSnap = await getDocs(collection(db, 'users'));
+      let foundUser: any = null;
 
-      if (querySnap.empty) {
+      usersSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        const dbUsername = String(data.username || data.nationalId || data.employeeId || '').trim();
+        
+        // مقارنة اسم المستخدم أو الرقم الشخصي/الوظيفي بغض النظر عن المسافات البسيطة
+        if (dbUsername === trimmedUser) {
+          foundUser = { id: docSnap.id, ...data };
+        }
+      });
+
+      if (!foundUser) {
         throw new Error('اسم المستخدم غير مسجل في النظام');
       }
 
-      let foundUser: any = null;
-      querySnap.forEach(docSnap => {
-        foundUser = { id: docSnap.id, ...docSnap.data() };
-      });
-
-      if (!foundUser || !foundUser.isActive) {
-        throw new Error('هذا الحساب معطل أو غير موجود');
+      if (foundUser.isActive === false) {
+        throw new Error('هذا الحساب معطل حالياً');
       }
 
-      // بالنسبة للكشاف والمعلم، الرقم الشخصي أو رقم الترتيب هو اسم المستخدم
-      // إذا كان الحساب يتطلب كلمة مرور مسجلة، نقوم بمقارنتها، أو نسمح بالدخول المباشر بالرقم إذا لم تكن مطلوبة
+      // التحقق من كلمة المرور إذا كانت مسجلة للحساب
       if (foundUser.passwordHash && foundUser.passwordHash !== trimmedPass) {
         throw new Error('كلمة المرور غير صحيحة');
       }
