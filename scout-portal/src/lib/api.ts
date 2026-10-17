@@ -3,7 +3,7 @@ import {
   IncidentReport, TroopActivity, ScoutBadge, Certificate, AuditLogItem, SiteSettings 
 } from '../types';
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 
 // قائمة الكشافين الرسمية (الـ 127 كشافاً من ملف الأكسل)
 const HARDCODED_SCOUTS_LIST: ScoutProfile[] = [
@@ -137,7 +137,6 @@ const HARDCODED_SCOUTS_LIST: ScoutProfile[] = [
 ];
 
 export const api = {
-  // Public Info & Stats
   getPublicInfo: async () => {
     try {
       const teachersSnap = await getDocs(collection(db, 'teachers'));
@@ -163,7 +162,6 @@ export const api = {
         }
       };
     } catch (err) {
-      console.error('Error fetching public info:', err);
       return {
         troopName: 'فرقة فتيان أحمد الفاتح الكشفية',
         schoolName: 'مدرسة أحمد الفاتح الإعدادية للبنين',
@@ -175,7 +173,6 @@ export const api = {
     }
   },
 
-  // إرجاع كافة الكشافين ليظهروا لدى القائد والمعلمين
   getScouts: async () => {
     return HARDCODED_SCOUTS_LIST;
   },
@@ -190,6 +187,40 @@ export const api = {
 
   deleteMultipleScouts: async (ids: string[], actor: any) => {
     return { success: true };
+  },
+
+  // صلاحية إضافة نقاط للكشاف بواسطة القائد
+  addPointsToScout: async (scoutId: string, points: number, reason: string, actor: any) => {
+    try {
+      await addDoc(collection(db, 'evaluations'), {
+        scoutId,
+        points,
+        behaviorCategory: reason,
+        type: points >= 0 ? 'POSITIVE' : 'NEGATIVE',
+        status: 'APPROVED', // اعتماد مباشر للنقاط التي يضيفها القائد
+        evaluatorName: actor?.name || 'القائد',
+        createdAt: new Date().toISOString()
+      });
+      return { success: true, message: 'تم إضافة النقاط بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل إضافة النقاط: ' + err.message);
+    }
+  },
+
+  // صلاحية منح شارة للكشاف بواسطة القائد
+  awardBadgeToScout: async (scoutId: string, badgeId: string, notes: string, actor: any) => {
+    try {
+      await addDoc(collection(db, 'awardedBadges'), {
+        scoutId,
+        badgeId,
+        notes,
+        awardedBy: actor?.name || 'القائد',
+        awardedAt: new Date().toISOString()
+      });
+      return { success: true, message: 'تم منح الشارة بنجاح' };
+    } catch (err: any) {
+      throw new Error('فشل منح الشارة: ' + err.message);
+    }
   },
 
   getTeachers: async () => {
@@ -297,7 +328,11 @@ export const api = {
   },
 
   getBadges: async () => {
-    return { badges: [] };
+    return { badges: [
+      { id: 'b1', name: 'شارة التفوق الكشفي', description: 'منحت للتميز المستمر' },
+      { id: 'b2', name: 'شارة الانضباط والانتظام', description: 'لالتزام بالزي والمواعيد' },
+      { id: 'b3', name: 'شارة الخدمة العامة', description: 'للمشاركة الفعالة في الأنشطة المجتمعية' }
+    ] };
   },
 
   awardBadge: async (badgeId: string, scoutId: string, notes: string, actor: any) => {
