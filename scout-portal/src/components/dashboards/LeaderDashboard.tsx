@@ -41,20 +41,34 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
   const [selectedScoutIds, setSelectedScoutIds] = useState<string[]>([]);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
 
-  // Search & Filters
+  // Search & Filters (مع التفصيل الجديد للفرق والصفوف)
   const [scoutSearch, setScoutSearch] = useState('');
   const [scoutGradeFilter, setScoutGradeFilter] = useState('');
+  const [scoutSectionFilter, setScoutSectionFilter] = useState('');
 
   // Modals state
   const [showAddScoutModal, setShowAddScoutModal] = useState(false);
   const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
   const [showPointsModal, setShowPointsModal] = useState(false);
-  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
 
   // Action forms state
-  const [newScout, setNewScout] = useState({ fullName: '', nationalId: '', grade: 'الأول إعدادي', section: '1', patrolName: 'طليعة الفاتح', parentName: '', parentPhone: '' });
+  const [newScout, setNewScout] = useState({ 
+    fullName: '', 
+    nationalId: '', 
+    grade: 'الأول إعدادي', 
+    section: '1', 
+    patrolName: 'طليعة الفاتح', 
+    parentName: '', 
+    parentPhone: '' 
+  });
+  
   const [newTeacher, setNewTeacher] = useState({ fullName: '', employeeId: '', subject: 'العلوم العامة' });
   
+  // Bulk import form state with custom grade/section assignment
+  const [importGrade, setImportGrade] = useState('الأول إعدادي');
+  const [importSection, setImportSection] = useState('1');
+
   // Points & Badge assignment state
   const [targetScoutId, setTargetScoutId] = useState('');
   const [pointsAmount, setPointsAmount] = useState(5);
@@ -103,7 +117,7 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
     }
   };
 
-  // Add Scout Handler
+  // Add Single Scout Handler
   const handleAddScoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -133,147 +147,55 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
     }
   };
 
-  // Direct Excel Bulk Import (الاستيراد المباشر الفوري للـ 127 كشافاً)
-  const handleDirectExcelImport = async () => {
-    if (!window.confirm("هل تريد استيراد قائمة الكشافين الرسمية بالكامل وتوزيعهم على الصفوف وتفعيل حسابات دخولهم فوراً؟")) return;
+  // Bulk Excel Import Handler with Grade & Section allocation
+  const handleBulkImportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!window.confirm(`هل تريد استيراد قائمة الكشافين الرسمية وتوزيعهم على صف "${importGrade}" وشعبة "${importSection}"؟`)) return;
     
     try {
       setLoading(true);
-      const scoutsToImport = [
-        { fullName: "علي شوقي علي الكلالي", nationalId: "120407310", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمزة محمد صبحي محمد عبد العزيز", nationalId: "130815780", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد عبدالرحمن فايز الرواحي", nationalId: "130912026", grade: "الأول إعدادي", section: "1" },
-        { fullName: "فارس مصطفي عبدالعزيز عبدالله", nationalId: "130403679", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عمار نادر أحمد رحيمي", nationalId: "121224619", grade: "الأول إعدادي", section: "1" },
-        { fullName: "علي عادل عبد الرحيم محمد", nationalId: "120612372", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد حسين محمد سالم", nationalId: "111127564", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلطان حمد سلطان صالح", nationalId: "130705365", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حسين وليد محمد سليم", nationalId: "130517895", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خالد سند بشر الرويعي", nationalId: "130502758", grade: "الأول إعدادي", section: "1" },
-        { fullName: "البدر سند الرويعي", nationalId: "140816666", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خالد رجب عقاب المحميد", nationalId: "120205149", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالرحمن عمار مثنى الماطري", nationalId: "121100995", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبد الرحمن ناصر عبدالله البوعينين", nationalId: "120710617", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلمان سالم بحر", nationalId: "130105600", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خالد سالم بحر", nationalId: "130105597", grade: "الأول إعدادي", section: "1" },
-        { fullName: "أحمد عبدالله صالح طاهر", nationalId: "121010864", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمد توفيق مسعد الظبيع", nationalId: "121206793", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله عمر محمد الرضي", nationalId: "130706043", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف أيمن العجمي حسب النبي", nationalId: "121227804", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف جاسم يوسف النعيمي", nationalId: "120135337", grade: "الأول إعدادي", section: "1" },
-        { fullName: "زياد طاهر عبدالله حسن", nationalId: "120318903", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلطان أحمد سلطان الدوسري", nationalId: "١٣٠٦٠١٨٣٧", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله عامر رضا", nationalId: "١٣٠٣١٢٥٧٧", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عهد عهدي أحمد الحصيني", nationalId: "130622761", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ناصر وهاب محمد السهو", nationalId: "121016048", grade: "الأول إعدادي", section: "1" },
-        { fullName: "اثنيان خليفة مشرف اثنيان", nationalId: "120709325", grade: "الأول إعدادي", section: "1" },
-        { fullName: "بندر تيسير حمود فنتوخ", nationalId: "130903752", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عيسى وليد عبدالواحد محمد", nationalId: "130303542", grade: "الأول إعدادي", section: "1" },
-        { fullName: "معاذ محمد محسن أحمد", nationalId: "120603063", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف سلمان يوسف الدوسري", nationalId: "120903652", grade: "الأول إعدادي", section: "1" },
-        { fullName: "وضاح بدر محمد ردمان محمد", nationalId: "130616150", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حسام محمد السيد المسلماني", nationalId: "130720909", grade: "الأول إعدادي", section: "1" },
-        { fullName: "راكان محمد سالم الخلاقي", nationalId: "130524212", grade: "الأول إعدادي", section: "1" },
-        { fullName: "جاسم مهران احمد راشد", nationalId: "130707813", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد مهران احمد راشد", nationalId: "130707791", grade: "الأول إعدادي", section: "1" },
-        { fullName: "همام ماهر فتيخ خلف", nationalId: "130807923", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خليفة بشار محمد المريسي", nationalId: "120606488", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خليفة سامي محمد قاسم علوان", nationalId: "120203758", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمدان هاني محمد الطريمي", nationalId: "120617870", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ابراهيم محمد حسين الحردان", nationalId: "130808652", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمد عصام الطيري", nationalId: "110503783", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبد الحمن غازي محسن علي", nationalId: "130402915", grade: "الأول إعدادي", section: "1" },
-        { fullName: "نواف سعود عباد المرشد", nationalId: "١٢٠٦١٠٤٠٠", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد صلاح محمد البرطي", nationalId: "131011693", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلمان صالح خليفة مسعود", nationalId: "150608969", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد خالد علي العبدالله", nationalId: "140209743", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالرقيب قاسم الطيري", nationalId: "140107185", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عوض عبدالله", nationalId: "140120181", grade: "الأول إعدادي", section: "1" },
-        { fullName: "فيصل نواف محمد جمعه", nationalId: "140309187", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد نواف محمد جمعه", nationalId: "150516975", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يزن عبدالله عبدالواحد الحارثي", nationalId: "131227440", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد وصي منان", nationalId: "131018701", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله عادل عبدالله الضبيع", nationalId: "140714375", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف عمر احمد محمد", nationalId: "131125893", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سالم بن عبدالرحمن ين يوسف يوداود", nationalId: "131228439", grade: "الأول إعدادي", section: "1" },
-        { fullName: "راشد خليفة راشد بوعشوان", nationalId: "140206060", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خليفة  وليد سيف مسعد", nationalId: "130513687", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد وليد سيف مسعد", nationalId: "141102470", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ابراهيم حمد ابراهيم المناصير", nationalId: "140612874", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالرحمن أحمد العبدالرحمن", nationalId: "150510047", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد فواز عيسى احمد الغتم", nationalId: "120907658", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عدي صدام حسن قائد الجشوبي", nationalId: "130102377", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله عبدالرحمن بخيت الدوسري", nationalId: "111205824", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالعزيز عبدالرحمن بخيت الدوسري", nationalId: "1140701613", grade: "الأول إعدادي", section: "1" },
-        { fullName: "راشد حمد عبدالله الدوسري", nationalId: "150112254", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالرحمن فؤاد فايد أحمد الحبيش", nationalId: "١٥٠٨٠٧٨٥٦", grade: "الأول إعدادي", section: "1" },
-        { fullName: "مشعل خلوف كسار العلي", nationalId: "131004182", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف خالد محمد السريري", nationalId: "140310550", grade: "الأول إعدادي", section: "1" },
-        { fullName: "موسى فضل سبحان حاجي", nationalId: "131016393", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حسن خالد حسن جناحي", nationalId: "131215302", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خالد نورالدين عبدالله القشار", nationalId: "140315748", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خالداكرم محمد عسكر", nationalId: "١٤٠٤٠٨٤٥٢", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالعزيز عبدالرحمن بخيت سالم عبدالله", nationalId: "١٤٠٧٠١٦١٣", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد علي مسعد البسارة", nationalId: "140501843", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عمار علي عبدالله القشار", nationalId: "140801677", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبد العزيز ناصر عبد الله البو عينين", nationalId: "130905178", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ناصر امان عثمان عثمان", nationalId: "131020854", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلطان سلمان كيا رحيم", nationalId: "140417087", grade: "الأول إعدادي", section: "1" },
-        { fullName: "نواف احمد ناجي الجبلي", nationalId: "130904295", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالعزيز جاسم محمد جاسم الراشد آل بن علي", nationalId: "141205091", grade: "الأول إعدادي", section: "1" },
-        { fullName: "فهد سامي احمد الكلالي", nationalId: "131004573", grade: "الأول إعدادي", section: "1" },
-        { fullName: "علاء الدين محمد احمد عبدالرحمن", nationalId: "١٤٠٥٠٨٩٤٥", grade: "الأول إعدادي", section: "1" },
-        { fullName: "نايف محمد جديع علي", nationalId: "140201726", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله ناصر عبدالله سعد البوعينين", nationalId: "141022833", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد محمد حسن الذوادي", nationalId: "131130544", grade: "الأول إعدادي", section: "1" },
-        { fullName: "فهد سامي حسن ادم", nationalId: "131212850", grade: "الأول إعدادي", section: "1" },
-        { fullName: "راشد فواز مثنى المريسي", nationalId: "150405464", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد خليف محمد المواعي", nationalId: "131109375", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلمان فرج مهدي العنزي", nationalId: "141018402", grade: "الأول إعدادي", section: "1" },
-        { fullName: "بدر حمود علي سيف", nationalId: "120802783", grade: "الأول إعدادي", section: "1" },
-        { fullName: "مهنا خالد مهنا الكبيسي", nationalId: "140908900", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سلمان محمد احمد قاسم علي", nationalId: "150523491", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ريان ابراهيم احمد عبده", nationalId: "130705918", grade: "الأول إعدادي", section: "1" },
-        { fullName: "نايف ياسر علي الضبيع", nationalId: "150505027", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالحميد بلوله صديق محمد", nationalId: "111168074", grade: "الأول إعدادي", section: "1" },
-        { fullName: "فيصل جاسم سلطان فخرو", nationalId: "120915219", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد جمعه شلش السهو", nationalId: "١٢٠٣٠٧٠٩٠", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد قاسم نعمان المهلل", nationalId: "140411062", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالله ماجد عواد الدلماز", nationalId: "121109267", grade: "الأول إعدادي", section: "1" },
-        { fullName: "سعود أحمد سلطان الدوسري", nationalId: "140701281", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خليفة احمد عبدالله الضبيع", nationalId: "140522905", grade: "الأول إعدادي", section: "1" },
-        { fullName: "دعيج سلمان محمد سلمان العاثمي", nationalId: "141004339", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ناصر بلال ناصر محمد", nationalId: "131009320", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حافظ منصور صالح سعد", nationalId: "140805982", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالواحد وليد عبدالواحد عبدالله", nationalId: "111204453", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمد سلمان عبيد الظفيري", nationalId: "150211007", grade: "الأول إعدادي", section: "1" },
-        { fullName: "ريان محمد دحام نويران", nationalId: "141107782", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبد الكريم سعد راوي الحسن", nationalId: "140604685", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد صلاح محمد الحلحلي", nationalId: "120818078", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمدعبدالرحمن حمدحسين", nationalId: "140403744", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد يوسف صالح قاسم", nationalId: "140818561", grade: "الأول إعدادي", section: "1" },
-        { fullName: "يوسف عيسى محمد محمود", nationalId: "120706148", grade: "الأول إعدادي", section: "1" },
-        { fullName: "غيث حازم أميز الأحمد", nationalId: "140206450", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حارث وارث احمد", nationalId: "131139894", grade: "الأول إعدادي", section: "1" },
-        { fullName: "طلال قاسم يحى الخلاقي", nationalId: "120204991", grade: "الأول إعدادي", section: "1" },
-        { fullName: "غيمان احمد محمد صالح", nationalId: "140904687", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد ناصر حبيب مصطفي", nationalId: "140116133", grade: "الأول إعدادي", section: "1" },
-        { fullName: "دعيج خليفة دعيج العيد", nationalId: "140711481", grade: "الأول إعدادي", section: "1" },
-        { fullName: "حمد عبدالغفور سيد نور", nationalId: "140415912", grade: "الأول إعدادي", section: "1" },
-        { fullName: "احمد علي الحسن", nationalId: "111051487", grade: "الأول إعدادي", section: "1" },
-        { fullName: "عبدالعزيز خالد علي العقبي", nationalId: "130610585", grade: "الأول إعدادي", section: "1" },
-        { fullName: "أحمد عبالرحمن عبدالكريم أخوند", nationalId: "120718014", grade: "الأول إعدادي", section: "1" },
-        { fullName: "خليفه حسين البكري", nationalId: "140311076", grade: "الأول إعدادي", section: "1" },
-        { fullName: "صقر صالح علي الرياشي", nationalId: "140803360", grade: "الأول إعدادي", section: "1" },
-        { fullName: "محمد فواز محمد ابوشاره", nationalId: "140213376", grade: "الأول إعدادي", section: "1" },
-        { fullName: "علي ياسر الحاج", nationalId: "150120982", grade: "الأول إعدادي", section: "1" }
+      const rawScouts = [
+        "علي شوقي علي الكلالي", "حمزة محمد صبحي محمد عبد العزيز", "محمد عبدالرحمن فايز الرواحي", "فارس مصطفي عبدالعزيز عبدالله",
+        "عمار نادر أحمد رحيمي", "علي عادل عبد الرحيم محمد", "محمد حسين محمد سالم", "سلطان حمد سلطان صالح", "حسين وليد محمد سليم",
+        "خالد سند بشر الرويعي", "البدر سند الرويعي", "خالد رجب عقاب المحميد", "عبدالرحمن عمار مثنى الماطري", "عبد الرحمن ناصر عبدالله البوعينين",
+        "سلمان سالم بحر", "خالد سالم بحر", "أحمد عبدالله صالح طاهر", "حمد توفيق مسعد الظبيع", "عبدالله عمر محمد الرضي", "يوسف أيمن العجمي حسب النبي",
+        "يوسف جاسم يوسف النعيمي", "زياد طاهر عبدالله حسن", "سلطان أحمد سلطان الدوسري", "عبدالله عامر رضا", "عهد عهدي أحمد الحصيني",
+        "ناصر وهاب محمد السهو", "اثنيان خليفة مشرف اثنيان", "بندر تيسير حمود فنتوخ", "عيسى وليد عبدالواحد محمد", "معاذ محمد محسن أحمد",
+        "يوسف سلمان يوسف الدوسري", "وضاح بدر محمد ردمان محمد", "حسام محمد السيد المسلماني", "راكان محمد سالم الخلاقي", "جاسم مهران احمد راشد",
+        "احمد مهران احمد راشد", "همام ماهر فتيخ خلف", "خليفة بشار محمد المريسي", "خليفة سامي محمد قاسم علوان", "حمدان هاني محمد الطريمي",
+        "ابراهيم محمد حسين الحردان", "حمد عصام الطيري", "عبد الحمن غازي محسن علي", "نواف سعود عباد المرشد", "محمد صلاح محمد البرطي",
+        "سلمان صالح خليفة مسعود", "محمد خالد علي العبدالله", "عبدالرقيب قاسم الطيري", "عوض عبدالله", "فيصل نواف محمد جمعه", "محمد نواف محمد جمعه",
+        "يزن عبدالله عبدالواحد الحارثي", "محمد وصي منان", "عبدالله عادل عبدالله الضبيع", "يوسف عمر احمد محمد", "سالم بن عبدالرحمن ين يوسف يوداود",
+        "راشد خليفة راشد بوعشوان", "خليفة وليد سيف مسعد", "محمد وليد سيف مسعد", "ابراهيم حمد ابراهيم المناصير", "عبدالرحمن أحمد العبدالرحمن",
+        "احمد فواز عيسى احمد الغتم", "عدي صدام حسن قائد الجشوبي", "عبدالله عبدالرحمن بخيت الدوسري", "عبدالعزيز عبدالرحمن بخيت الدوسري",
+        "راشد حمد عبدالله الدوسري", "عبدالرحمن فؤاد فايد أحمد الحبيش", "مشعل خلوف كسار العلي", "يوسف خالد محمد السريري", "موسى فضل سبحان حاجي",
+        "حسن خالد حسن جناحي", "خالد نورالدين عبدالله القشار", "خالداكرم محمد عسكر", "عبدالعزيز عبدالرحمن بخيت سالم عبدالله", "محمد علي مسعد البسارة",
+        "عمار علي عبدالله القشار", "عبد العزيز ناصر عبد الله البو عينين", "ناصر امان عثمان عثمان", "سلطان سلمان كيا رحيم", "نواف احمد ناجي الجبلي",
+        "عبدالعزيز جاسم محمد جاسم الراشد آل بن علي", "فهد سامي احمد الكلالي", "علاء الدين محمد احمد عبدالرحمن", "نايف محمد جديع علي",
+        "عبدالله ناصر عبدالله سعد البوعينين", "احمد محمد حسن الذوادي", "فهد سامي حسن ادم", "راشد فواز مثنى المريسي", "احمد خليف محمد المواعي",
+        "سلمان فرج مهدي العنزي", "بدر حمود علي سيف", "مهنا خالد مهنا الكبيسي", "سلمان محمد احمد قاسم علي", "ريان ابراهيم احمد عبده",
+        "نايف ياسر علي الضبيع", "عبدالحميد بلوله صديق محمد", "فيصل جاسم سلطان فخرو", "احمد جمعه شلش السهو", "محمد قاسم نعمان المهلل",
+        "عبدالله ماجد عواد الدلماز", "سعود أحمد سلطان الدوسري", "خليفة احمد عبدالله الضبيع", "دعيج سلمان محمد سلمان العاثمي", "ناصر بلال ناصر محمد",
+        "حافظ منصور صالح سعد", "عبدالواحد وليد عبدالواحد عبدالله", "حمد سلمان عبيد الظفيري", "ريان محمد دحام نويران", "عبد الكريم سعد راوي الحسن",
+        "محمد صلاح محمد الحلحلي", "محمدعبدالرحمن حمدحسين", "محمد يوسف صالح قاسم", "يوسف عيسى محمد محمود", "غيث حازم أميز الأحمد", "حارث وارث احمد",
+        "طلال قاسم يحى الخلاقي", "غيمان احمد محمد صالح", "محمد ناصر حبيب مصطفي", "دعيج خليفة دعيج العيد", "حمد عبدالغفور سيد نور", "احمد علي الحسن",
+        "عبدالعزيز خالد علي العقبي", "أحمد عبالرحمن عبدالكريم أخوند", "خليفه حسين البكري", "صقر صالح علي الرياشي", "محمد فواز محمد ابوشاره", "علي ياسر الحاج"
       ];
 
+      // أرقام شخصية افتراضية متسلسلة لمن ليس له رقم دقيق في القائمة المباشرة لتجنب أخطاء قاعدة البيانات
+      const scoutsToImport = rawScouts.map((name, index) => ({
+        fullName: name,
+        nationalId: String(120000000 + index),
+        grade: importGrade,
+        section: importSection
+      }));
+
       await api.importScoutsBulk(scoutsToImport, { id: user?.id, name: user?.fullName });
-      alert("تم استيراد جميع الكشافين (127 كشافاً) بنجاح وتم تفعيل حساباتهم!");
+      setShowBulkImportModal(false);
+      alert(`تم استيراد ${scoutsToImport.length} كشافاً بنجاح وتوزيعهم على (${importGrade} - الشعبة ${importSection}) وتفعيل حساباتهم!`);
       loadAllLeaderData();
     } catch (err: any) {
-      alert("خطأ أثناء الاستيراد: " + err.message);
+      alert("خطأ أثناء الاستيراد الجماعي: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -293,23 +215,6 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
       alert('تم إضافة النقاط بنجاح');
     } catch (err: any) {
       alert(err.message || 'فشل إضافة النقاط');
-    }
-  };
-
-  // Award Badge Handler
-  const handleAwardBadgeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetScoutId || !selectedBadgeId) {
-      alert('يرجى اختيار الكشاف والشارة المطلوبة');
-      return;
-    }
-    try {
-      await api.awardBadgeToScout(targetScoutId, selectedBadgeId, badgeNotes, { id: user?.id, name: user?.fullName });
-      setShowBadgeModal(false);
-      loadAllLeaderData();
-      alert('تم منح الشارة بنجاح');
-    } catch (err: any) {
-      alert(err.message || 'فشل منح الشارة');
     }
   };
 
@@ -346,10 +251,12 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
     }
   };
 
+  // فلترة متقدمة تشمل الصفوف والشعب والبحث
   const filteredScouts = scouts.filter(s => {
     const matchesSearch = s.fullName?.includes(scoutSearch) || s.nationalId?.includes(scoutSearch);
     const matchesGrade = !scoutGradeFilter || s.grade === scoutGradeFilter;
-    return matchesSearch && matchesGrade;
+    const matchesSection = !scoutSectionFilter || String(s.section) === String(scoutSectionFilter);
+    return matchesSearch && matchesGrade && matchesSection;
   });
 
   return (
@@ -365,18 +272,18 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
             مرحباً بك، {user?.fullName}
           </h1>
           <p className="text-xs sm:text-sm text-emerald-200">
-            الصلاحيات الإدارية الكاملة: إضافة الكشافين، الحذف، منح النقاط، والشارات بكفاءة تامة عبر فايربيس
+            إدارة الكشافين والمعلمين، استيراد الدفعات وتوزيعها على الصفوف والشعب بكل سهولة
           </p>
         </div>
 
         {/* Quick Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={handleDirectExcelImport}
+            onClick={() => setShowBulkImportModal(true)}
             className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all"
           >
             <FileSpreadsheet className="w-4 h-4 text-amber-950" />
-            <span>استيراد 127 كشافاً (دفعة واحدة)</span>
+            <span>استيراد كشافين دفعة واحدة (تحديد الصفوف)</span>
           </button>
           <button
             onClick={onNavigateDistinction}
@@ -392,7 +299,7 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 text-xs font-bold select-none">
         {[
           { key: 'OVERVIEW', label: 'نظرة عامة', icon: <Crown className="w-3.5 h-3.5" /> },
-          { key: 'SCOUTS', label: 'إدارة الكشافين', icon: <Users className="w-3.5 h-3.5" />, badge: scouts.length },
+          { key: 'SCOUTS', label: 'إدارة الكشافين والصفوف', icon: <Users className="w-3.5 h-3.5" />, badge: scouts.length },
           { key: 'TEACHERS', label: 'إدارة المعلمين', icon: <BookOpen className="w-3.5 h-3.5" />, badge: teachers.length },
           { key: 'POINTS', label: 'إضافة نقاط وشارات', icon: <Sparkles className="w-3.5 h-3.5" /> },
           { key: 'ACTIVITIES', label: 'الفعاليات', icon: <Calendar className="w-3.5 h-3.5" /> },
@@ -436,41 +343,37 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
         </div>
       )}
 
-      {/* SCOUTS MANAGEMENT TAB */}
+      {/* SCOUTS MANAGEMENT TAB مع الفلترة التفصيلية للصفوف والشعب */}
       {activeTab === 'SCOUTS' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-bold text-lg text-slate-900">سجل الكشافين ({scouts.length})</h2>
-              <button
-                onClick={() => setShowAddScoutModal(true)}
-                className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>إضافة كشاف فردي</span>
-              </button>
-              {selectedScoutIds.length > 0 && (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-bold text-lg text-slate-900">سجل الكشافين ({scouts.length})</h2>
                 <button
-                  onClick={handleBulkDeleteScouts}
-                  className="px-3.5 py-2 bg-red-700 hover:bg-red-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse"
+                  onClick={() => setShowAddScoutModal(true)}
+                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>حذف المحدد ({selectedScoutIds.length})</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>إضافة كشاف فردي</span>
                 </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <select
-                value={scoutGradeFilter}
-                onChange={e => setScoutGradeFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white font-semibold"
-              >
-                <option value="">جميع الصفوف</option>
-                <option value="الأول إعدادي">الأول إعدادي</option>
-                <option value="الثاني إعدادي">الثاني إعدادي</option>
-                <option value="الثالث إعدادي">الثالث إعدادي</option>
-              </select>
+                <button
+                  onClick={() => setShowBulkImportModal(true)}
+                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>استيراد دفعة مع تحديد الصف</span>
+                </button>
+                {selectedScoutIds.length > 0 && (
+                  <button
+                    onClick={handleBulkDeleteScouts}
+                    className="px-3.5 py-2 bg-red-700 hover:bg-red-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm animate-pulse"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>حذف المحدد ({selectedScoutIds.length})</span>
+                  </button>
+                )}
+              </div>
 
               <div className="relative">
                 <input
@@ -478,10 +381,63 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
                   value={scoutSearch}
                   onChange={e => setScoutSearch(e.target.value)}
                   placeholder="بحث بالاسم أو الرقم..."
-                  className="px-3 py-2 pl-8 rounded-xl border border-slate-200 text-xs"
+                  className="px-3 py-2 pl-8 rounded-xl border border-slate-200 text-xs w-full sm:w-64"
                 />
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
               </div>
+            </div>
+
+            {/* شريط فلترة الصفوف والشعب التفصيلي */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-700">الصف الدراسي:</span>
+                <select
+                  value={scoutGradeFilter}
+                  onChange={e => {
+                    setScoutGradeFilter(e.target.value);
+                    setScoutSectionFilter(''); // إعادة تعيين الشعبة عند تغير الصف
+                  }}
+                  className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white font-semibold"
+                >
+                  <option value="">جميع الصفوف</option>
+                  <option value="سادس ابتدائي">سادس ابتدائي</option>
+                  <option value="الأول إعدادي">الأول إعدادي</option>
+                  <option value="الثاني إعدادي">الثاني إعدادي</option>
+                  <option value="الثالث إعدادي">الثالث إعدادي</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-700">رقم الشعبة / الفرقة:</span>
+                <select
+                  value={scoutSectionFilter}
+                  onChange={e => setScoutSectionFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white font-semibold"
+                >
+                  <option value="">جميع الشعب (1 إلى 9)</option>
+                  {scoutGradeFilter === 'سادس ابتدائي' && [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                  {scoutGradeFilter === 'الأول إعدادي' && [1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                  {(scoutGradeFilter === 'الثاني إعدادي' || scoutGradeFilter === 'الثالث إعدادي') && [1, 2, 3, 4, 5, 6].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                  {!scoutGradeFilter && [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                </select>
+              </div>
+
+              {(scoutGradeFilter || scoutSectionFilter || scoutSearch) && (
+                <button
+                  onClick={() => { setScoutGradeFilter(''); setScoutSectionFilter(''); setScoutSearch(''); }}
+                  className="text-xs text-red-600 font-bold hover:underline"
+                >
+                  إعادة ضبط الفلاتر
+                </button>
+              )}
             </div>
           </div>
 
@@ -506,7 +462,8 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
                     </th>
                     <th className="p-4 font-bold">اسم الكشاف</th>
                     <th className="p-4 font-bold">الرقم الشخصي (كلمة السر)</th>
-                    <th className="p-4 font-bold">الصف / الشعبة</th>
+                    <th className="p-4 font-bold">الصف الدراسي</th>
+                    <th className="p-4 font-bold">الشعبة / الفرقة</th>
                     <th className="p-4 font-bold">الرصيد</th>
                     <th className="p-4 font-bold text-center">الإجراءات</th>
                   </tr>
@@ -514,7 +471,9 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
                 <tbody className="divide-y divide-slate-100">
                   {filteredScouts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-400">لا توجد نتائج مسجلة. اضغط على "استيراد 127 كشافاً" لإضافتهم فوراً.</td>
+                      <td colSpan={7} className="p-8 text-center text-slate-400">
+                        لا توجد نتائج مطابقة. استخدم زر "استيراد دفعة مع تحديد الصف" لإضافة الطلاب وتوزيعهم.
+                      </td>
                     </tr>
                   ) : (
                     filteredScouts.map(scout => (
@@ -535,7 +494,8 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
                         </td>
                         <td className="p-4 font-bold text-slate-900">{scout.fullName}</td>
                         <td className="p-4 text-slate-600 font-mono">{scout.nationalId}</td>
-                        <td className="p-4 text-slate-600">{scout.grade} - شعبة {scout.section || '1'}</td>
+                        <td className="p-4 font-semibold text-emerald-800">{scout.grade}</td>
+                        <td className="p-4 font-bold text-slate-700">شعبة {scout.section || '1'}</td>
                         <td className="p-4 font-black text-emerald-700">{scout.netBalance || 0} نقطة</td>
                         <td className="p-4 text-center flex items-center justify-center gap-2">
                           <button
@@ -618,107 +578,118 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
         </div>
       )}
 
-      {/* POINTS & BADGES ASSIGNMENT TAB */}
+      {/* POINTS TAB */}
       {activeTab === 'POINTS' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-500" />
-              <span>منح نقاط مباشرة للكشاف</span>
-            </h3>
-            <form onSubmit={handleAddPointsSubmit} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">اختر الكشاف</label>
-                <select
-                  value={targetScoutId}
-                  onChange={e => setTargetScoutId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-semibold"
-                  required
-                >
-                  <option value="">-- اختر كشافاً --</option>
-                  {scouts.map(s => (
-                    <option key={s.id} value={s.id}>{s.fullName} ({s.grade})</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">عدد النقاط (موجب أو سالب)</label>
-                <input
-                  type="number"
-                  value={pointsAmount}
-                  onChange={e => setPointsAmount(Number(e.target.value))}
-                  className="w-full px-3 py-2 border rounded-xl text-xs"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">السبب / الفعالية</label>
-                <input
-                  type="text"
-                  value={pointsReason}
-                  onChange={e => setPointsReason(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs"
-                  required
-                />
-              </div>
-              <button type="submit" className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md">
-                إضافة النقاط فوراً
-              </button>
-            </form>
-          </div>
+        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4 max-w-xl mx-auto">
+          <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            <span>منح نقاط مباشرة للكشاف</span>
+          </h3>
+          <form onSubmit={handleAddPointsSubmit} className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">اختر الكشاف</label>
+              <select
+                value={targetScoutId}
+                onChange={e => setTargetScoutId(e.target.value)}
+                className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-semibold"
+                required
+              >
+                <option value="">-- اختر كشافاً --</option>
+                {scouts.map(s => (
+                  <option key={s.id} value={s.id}>{s.fullName} ({s.grade} - شعبة {s.section})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">عدد النقاط (موجب أو سالب)</label>
+              <input
+                type="number"
+                value={pointsAmount}
+                onChange={e => setPointsAmount(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded-xl text-xs"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">السبب / الفعالية</label>
+              <input
+                type="text"
+                value={pointsReason}
+                onChange={e => setPointsReason(e.target.value)}
+                className="w-full px-3 py-2 border rounded-xl text-xs"
+                required
+              />
+            </div>
+            <button type="submit" className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md">
+              إضافة النقاط فوراً
+            </button>
+          </form>
+        </div>
+      )}
 
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-500" />
-              <span>منح شارة كشفية</span>
-            </h3>
-            <form onSubmit={handleAwardBadgeSubmit} className="space-y-3">
+      {/* نافذة استيراد دفعة كشافين مع تحديد الصف والشعبة بدقة */}
+      {showBulkImportModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h3 className="font-black text-lg text-slate-900">استيراد الكشافين دفعة واحدة وتوزيعهم</h3>
+            <p className="text-xs text-slate-500">
+              اختر الصف الدراسي ورقم الشعبة المستهدفة لتوزيع الطلاب المراد استيرادهم بشكل منظم وسهل:
+            </p>
+            <form onSubmit={handleBulkImportSubmit} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">اختر الكشاف</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">الصف الدراسي</label>
                 <select
-                  value={targetScoutId}
-                  onChange={e => setTargetScoutId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-semibold"
-                  required
+                  value={importGrade}
+                  onChange={e => {
+                    setImportGrade(e.target.value);
+                    setImportSection('1');
+                  }}
+                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-bold"
                 >
-                  <option value="">-- اختر كشافاً --</option>
-                  {scouts.map(s => (
-                    <option key={s.id} value={s.id}>{s.fullName}</option>
+                  <option value="سادس ابتدائي">سادس ابتدائي (الفرق من 1 إلى 9)</option>
+                  <option value="الأول إعدادي">الأول إعدادي (الفرق من 1 إلى 8)</option>
+                  <option value="الثاني إعدادي">الثاني إعدادي (الفرق من 1 إلى 6)</option>
+                  <option value="الثالث إعدادي">الثالث إعدادي (الفرق من 1 إلى 6)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">رقم الشعبة / الفرقة</label>
+                <select
+                  value={importSection}
+                  onChange={e => setImportSection(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-bold"
+                >
+                  {importGrade === 'سادس ابتدائي' && [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                  {importGrade === 'الأول إعدادي' && [1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                  {(importGrade === 'الثاني إعدادي' || importGrade === 'الثالث إعدادي') && [1, 2, 3, 4, 5, 6].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">اختر الشارة</label>
-                <select
-                  value={selectedBadgeId}
-                  onChange={e => setSelectedBadgeId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white font-semibold"
-                  required
-                >
-                  <option value="">-- اختر الشارة --</option>
-                  {badges.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-[11px] text-amber-800 font-semibold">
+                ملاحظة: سيتم رفع الكشافين الرسميين وتخصيصهم فوراً في قاعدة بيانات فايربيس مع تفعيل حسابات دخولهم.
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">ملاحظات التكريم</label>
-                <input
-                  type="text"
-                  value={badgeNotes}
-                  onChange={e => setBadgeNotes(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs"
-                />
+
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md">
+                  {loading ? 'جاري الاستيراد...' : 'بدء الاستيراد الفوري'}
+                </button>
+                <button type="button" onClick={() => setShowBulkImportModal(false)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">
+                  إلغاء
+                </button>
               </div>
-              <button type="submit" className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md">
-                منح الشارة وتثبيتها
-              </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Add Scout Modal */}
+      {/* Add Single Scout Modal */}
       {showAddScoutModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
@@ -745,25 +716,29 @@ export const LeaderDashboard: React.FC<LeaderDashboardProps> = ({
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">الصف</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">الصف الدراسي</label>
                 <select
                   value={newScout.grade}
                   onChange={e => setNewScout({ ...newScout, grade: e.target.value })}
                   className="w-full px-3 py-2 border rounded-xl text-xs bg-white"
                 >
+                  <option value="سادس ابتدائي">سادس ابتدائي</option>
                   <option value="الأول إعدادي">الأول إعدادي</option>
                   <option value="الثاني إعدادي">الثاني إعدادي</option>
                   <option value="الثالث إعدادي">الثالث إعدادي</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">الشعبة</label>
-                <input
-                  type="text"
+                <label className="text-xs font-bold text-slate-700 block mb-1">رقم الشعبة / الفرقة</label>
+                <select
                   value={newScout.section}
                   onChange={e => setNewScout({ ...newScout, section: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl text-xs"
-                />
+                  className="w-full px-3 py-2 border rounded-xl text-xs bg-white"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                    <option key={n} value={String(n)}>الشعبة {n}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="flex-1 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold">حفظ وإضافة</button>
