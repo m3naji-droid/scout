@@ -3,7 +3,7 @@ import {
   IncidentReport, TroopActivity, ScoutBadge, Certificate, AuditLogItem, SiteSettings 
 } from '../types';
 import { db } from '../firebase';
-import { collection, getDocs, doc, getDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, query, where } from 'firebase/firestore';
 
 export const api = {
   // Public Info & Stats
@@ -45,7 +45,7 @@ export const api = {
     }
   },
 
-  // Scouts Management with full safety mapping
+  // ==================== SCOUTS MANAGEMENT ====================
   getScouts: async () => {
     try {
       const snap = await getDocs(collection(db, 'scouts'));
@@ -116,7 +116,39 @@ export const api = {
     }
   },
 
-  // Teachers Management with anti-crash protection
+  deleteScout: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'scouts', id));
+      await addDoc(collection(db, 'auditLogs'), {
+        action: 'DELETE_SCOUT',
+        details: `حذف القائد ${actor?.name || 'السيستم'} كشافاً برقم معرف: ${id}`,
+        actorName: actor?.name || 'القائد',
+        createdAt: new Date().toISOString()
+      });
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل حذف الكشاف: ' + err.message);
+    }
+  },
+
+  deleteMultipleScouts: async (ids: string[], actor: any) => {
+    try {
+      for (const id of ids) {
+        await deleteDoc(doc(db, 'scouts', id));
+      }
+      await addDoc(collection(db, 'auditLogs'), {
+        action: 'DELETE_MULTIPLE_SCOUTS',
+        details: `حذف القائد ${actor?.name || 'السيستم'} دفعة كشافين بعدد: ${ids.length}`,
+        actorName: actor?.name || 'القائد',
+        createdAt: new Date().toISOString()
+      });
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف الجماعي للكشافين: ' + err.message);
+    }
+  },
+
+  // ==================== TEACHERS MANAGEMENT ====================
   getTeachers: async () => {
     try {
       const snap = await getDocs(collection(db, 'teachers'));
@@ -177,7 +209,39 @@ export const api = {
     }
   },
 
-  // Evaluations & Points
+  deleteTeacher: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'teachers', id));
+      await addDoc(collection(db, 'auditLogs'), {
+        action: 'DELETE_TEACHER',
+        details: `حذف القائد ${actor?.name || 'السيستم'} معلماً برقم معرف: ${id}`,
+        actorName: actor?.name || 'القائد',
+        createdAt: new Date().toISOString()
+      });
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل حذف المعلم: ' + err.message);
+    }
+  },
+
+  deleteMultipleTeachers: async (ids: string[], actor: any) => {
+    try {
+      for (const id of ids) {
+        await deleteDoc(doc(db, 'teachers', id));
+      }
+      await addDoc(collection(db, 'auditLogs'), {
+        action: 'DELETE_MULTIPLE_TEACHERS',
+        details: `حذف القائد ${actor?.name || 'السيستم'} دفعة معلمين بعدد: ${ids.length}`,
+        actorName: actor?.name || 'القائد',
+        createdAt: new Date().toISOString()
+      });
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف الجماعي للمعلمين: ' + err.message);
+    }
+  },
+
+  // ==================== EVALUATIONS & POINTS ====================
   getEvaluations: async () => {
     try {
       const snap = await getDocs(collection(db, 'evaluations'));
@@ -201,7 +265,16 @@ export const api = {
     return { success: true };
   },
 
-  // Suspensions
+  deleteEvaluation: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'evaluations', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل حذف التقييم: ' + err.message);
+    }
+  },
+
+  // ==================== SUSPENSIONS ====================
   getSuspensions: async () => {
     try {
       const snap = await getDocs(collection(db, 'suspensionRequests'));
@@ -219,7 +292,16 @@ export const api = {
     return { success: true };
   },
 
-  // Incident Reports
+  deleteSuspensionRequest: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'suspensionRequests', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف: ' + err.message);
+    }
+  },
+
+  // ==================== INCIDENT REPORTS ====================
   getIncidentReports: async () => {
     try {
       const snap = await getDocs(collection(db, 'incidentReports'));
@@ -231,7 +313,16 @@ export const api = {
     }
   },
 
-  // Activities
+  deleteIncidentReport: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'incidentReports', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف: ' + err.message);
+    }
+  },
+
+  // ==================== ACTIVITIES ====================
   getActivities: async () => {
     try {
       const snap = await getDocs(collection(db, 'activities'));
@@ -251,7 +342,16 @@ export const api = {
     return { success: true };
   },
 
-  // Badges
+  deleteActivity: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'activities', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل حذف الفعالية: ' + err.message);
+    }
+  },
+
+  // ==================== BADGES & CERTIFICATES ====================
   getBadges: async () => {
     try {
       const snap = await getDocs(collection(db, 'badges'));
@@ -273,7 +373,6 @@ export const api = {
     return { success: true };
   },
 
-  // Certificates
   getCertificates: async () => {
     try {
       const snap = await getDocs(collection(db, 'certificates'));
@@ -293,7 +392,16 @@ export const api = {
     return { success: true, certificate: { id: ref.id, ...certData } };
   },
 
-  // Audit Logs & Settings
+  deleteCertificate: async (id: string, actor: any) => {
+    try {
+      await deleteDoc(doc(db, 'certificates', id));
+      return { success: true };
+    } catch (err: any) {
+      throw new Error('فشل الحذف: ' + err.message);
+    }
+  },
+
+  // ==================== AUDIT LOGS & SETTINGS ====================
   getAuditLogs: async () => {
     try {
       const snap = await getDocs(collection(db, 'auditLogs'));
