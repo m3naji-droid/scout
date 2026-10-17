@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, ScoutProfile, TeacherProfile } from '../types';
+import { db } from '../firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -16,31 +18,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// قائمة القادة المعتمدين مع كافة الخصائص لتجنب أخطاء الفحص النصي
-const MOCK_USERS: any[] = [
-  { 
-    id: 'leader_basel', 
-    username: 'باسل', 
-    password: '1234', 
-    role: 'LEADER', 
-    name: 'القائد باسل حسن', 
-    fullName: 'القائد باسل حسن',
-    isActive: true 
-  },
-  { 
-    id: 'leader_mohammed', 
-    username: 'محمد', 
-    password: '5678', 
-    role: 'LEADER', 
-    name: 'القائد محمد علي', 
-    fullName: 'القائد محمد علي',
-    isActive: true 
-  },
-];
-
-const MOCK_SCOUTS: ScoutProfile[] = [];
-const MOCK_TEACHERS: TeacherProfile[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -79,14 +56,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     try {
       const trimmedUser = (username || '').trim();
-      const foundUser = MOCK_USERS.find(u => u.username === trimmedUser && u.password === password);
+      const trimmedPass = (password || '').trim();
 
-      if (!foundUser) {
-        throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة');
+      // 1. التحقق الاستثنائي من القادة الثابتين (باسل / محمد) لضمان دخولهم دائماً
+      if ((trimmedUser === 'باسل' && trimmedPass === '1234') || (trimmedUser === 'محمد' && trimmedPass === '5678')) {
+        const leaderUser = {
+          id: trimmedUser === 'باسل' ? 'leader_basel' : 'leader_mohammed',
+          username: trimmedUser,
+          fullName: trimmedUser === 'باسل' ? 'القائد باسل حسن' : 'القائد محمد علي',
+          role: 'LEADER',
+          isActive: true
+        };
+        const sessionToken = `session_${leaderUser.id}_${Date.now()}`;
+        setUser(leaderUser);
+        setToken(sessionToken);
+        localStorage.setItem('ahmed_alfateh_session', JSON.stringify({ user: leaderUser, token: sessionToken }));
+        return;
       }
 
-      if (!foundUser.isActive) {
+      // 2. البحث عن المستخدم في قاعدة بيانات Firebase (مجموعة users) للمعلمين والكشافين المضافين
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('username', '==', trimmedUser));
+      const querySnap = await getDocs(q);
+
+      if (querySnap.empty) {
+        throw new Error('اسم المستخدم غير مسجل في النظام');
+      }
+
+      let foundUser: any = null;
+      querySnap.forEach(docSnap => {
+        foundUser = { id: docSnap.id, ...docSnap.data() };
+      });
+
+      if (!foundUser || !foundUser.isActive) {
         throw new Error('هذا الحساب معطل أو غير موجود');
+      }
+
+      // بالنسبة للكشاف والمعلم، الرقم الشخصي أو رقم الترتيب هو اسم المستخدم
+      // إذا كان الحساب يتطلب كلمة مرور مسجلة، نقوم بمقارنتها، أو نسمح بالدخول المباشر بالرقم إذا لم تكن مطلوبة
+      if (foundUser.passwordHash && foundUser.passwordHash !== trimmedPass) {
+        throw new Error('كلمة المرور غير صحيحة');
       }
 
       const sessionToken = `session_${foundUser.id}_${Date.now()}`;
