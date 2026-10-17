@@ -79,7 +79,7 @@ export const api = {
     }
   },
 
-  // Scouts Management
+  // Scouts Management (الاسم، الرقم الشخصي، والصف)
   getScouts: async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'scouts'));
@@ -122,10 +122,12 @@ export const api = {
     }
   },
 
-  addScout: async (scoutData: any) => {
+  addScout: async (scoutData: { fullName: string, nationalId: string, grade: string }) => {
     try {
       const scoutRef = await addDoc(collection(db, 'scouts'), {
-        ...scoutData,
+        fullName: scoutData.fullName,
+        nationalId: scoutData.nationalId,
+        grade: scoutData.grade,
         totalPositivePoints: 0,
         totalDeductions: 0,
         netBalance: 0,
@@ -133,11 +135,13 @@ export const api = {
         activitiesAttendedCount: 0,
         registrationYear: '2026-2027',
         status: 'ACTIVE',
-        avatarStatus: 'APPROVED'
+        avatarStatus: 'APPROVED',
+        avatarUrl: ''
       });
 
+      // إنشاء حساب دخول تلقائي للكشاف باستخدام الرقم الشخصي
       await addDoc(collection(db, 'users'), {
-        username: scoutData.nationalId || scoutData.username,
+        username: scoutData.nationalId,
         fullName: scoutData.fullName,
         role: 'SCOUT',
         scoutId: scoutRef.id,
@@ -157,7 +161,7 @@ export const api = {
     return { success: true };
   },
 
-  // Teachers Management
+  // Teachers Management (الاسم ورقم الترتيب / الوظيفي)
   getTeachers: async () => {
     try {
       const snap = await getDocs(collection(db, 'teachers'));
@@ -169,40 +173,38 @@ export const api = {
     }
   },
 
-  addTeacher: async (teacherData: { fullName: string, employeeId: string, subject: string, assignedClasses?: string[] }) => {
+  addTeacher: async (teacherData: { fullName: string, employeeId: string }) => {
     try {
       const teacherRef = await addDoc(collection(db, 'teachers'), {
         fullName: teacherData.fullName,
-        employeeId: teacherData.employeeId,
-        subject: teacherData.subject || 'عام',
-        assignedClasses: teacherData.assignedClasses || [],
+        employeeId: teacherData.employeeId, // رقم الترتيب / الرقم الوظيفي
+        subject: 'عام',
         evaluationsGivenCount: 0,
         status: 'ACTIVE',
         createdAt: new Date().toISOString()
       });
 
+      // إنشاء حساب دخول تلقائي للمعلم باستخدام رقم الترتيب
       await addDoc(collection(db, 'users'), {
         username: teacherData.employeeId,
         fullName: teacherData.fullName,
         role: 'TEACHER',
-        password: 'password123',
         isActive: true,
         createdAt: new Date().toISOString()
       });
 
-      return { id: teacherRef.id, success: true, message: 'تم إضافة المعلم وحساب الدخول بنجاح' };
+      return { id: teacherRef.id, success: true, message: 'تم إضافة المعلم بنجاح' };
     } catch (err: any) {
       throw new Error('فشل إضافة المعلم: ' + err.message);
     }
   },
 
-  addUserAccount: async (userData: { fullName: string, username: string, passwordHash: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', assignedClasses?: string[], employeeId?: string, subject?: string }) => {
+  addUserAccount: async (userData: { fullName: string, username: string, passwordHash: string, role: 'TEACHER' | 'ADMIN' | 'SUPERVISOR', employeeId?: string }) => {
     try {
       const userRef = await addDoc(collection(db, 'users'), {
         username: userData.username,
         fullName: userData.fullName,
         role: userData.role,
-        assignedClasses: userData.assignedClasses || [],
         isActive: true,
         createdAt: new Date().toISOString(),
         passwordHash: userData.passwordHash
@@ -212,9 +214,7 @@ export const api = {
         await addDoc(collection(db, 'teachers'), {
           userId: userRef.id,
           fullName: userData.fullName,
-          employeeId: userData.employeeId || 'EMP-NEW',
-          subject: userData.subject || 'عام',
-          assignedClasses: userData.assignedClasses || [],
+          employeeId: userData.employeeId || userData.username,
           evaluationsGivenCount: 0,
           status: 'ACTIVE'
         });
@@ -282,7 +282,6 @@ export const api = {
     return { success: true, message: 'تم تسجيل التقييم بنجاح' };
   },
 
-  // Suspensions (طلبات الحرمان والتوقيف - لتلافي الخطأ الظاهر)
   getSuspensions: async () => {
     try {
       const snap = await getDocs(collection(db, 'suspensionRequests'));
