@@ -45,18 +45,22 @@ export const api = {
     }
   },
 
-  // Scouts Management
+  // Scouts Management with full safety mapping
   getScouts: async () => {
     try {
       const snap = await getDocs(collection(db, 'scouts'));
       const scouts: ScoutProfile[] = [];
       snap.forEach(d => {
-        const data = d.data();
+        const data = d.data() || {};
         scouts.push({ 
           id: d.id, 
           ...data,
-          fullName: data.fullName || data.name,
-          name: data.name || data.fullName 
+          fullName: data.fullName || data.name || 'كشاف بدون اسم',
+          name: data.name || data.fullName || 'كشاف بدون اسم',
+          nationalId: data.nationalId || '',
+          grade: data.grade || 'الأول إعدادي',
+          section: data.section || '1',
+          netBalance: data.netBalance || 0
         } as ScoutProfile);
       });
       return scouts;
@@ -101,8 +105,8 @@ export const api = {
 
       await addDoc(collection(db, 'auditLogs'), {
         action: 'ADD_SCOUT',
-        details: `أضاف القائد ${actor.name} الكشاف ${scoutData.fullName}`,
-        actorName: actor.name,
+        details: `أضاف القائد ${actor?.name || 'السيستم'} الكشاف ${scoutData.fullName}`,
+        actorName: actor?.name || 'القائد',
         createdAt: new Date().toISOString()
       });
 
@@ -112,18 +116,23 @@ export const api = {
     }
   },
 
-  // Teachers Management
+  // Teachers Management with anti-crash protection
   getTeachers: async () => {
     try {
       const snap = await getDocs(collection(db, 'teachers'));
       const teachers: TeacherProfile[] = [];
       snap.forEach(d => {
-        const data = d.data();
+        const data = d.data() || {};
         teachers.push({ 
           id: d.id, 
           ...data,
-          fullName: data.fullName || data.name,
-          name: data.name || data.fullName 
+          fullName: data.fullName || data.name || 'معلم بدون اسم',
+          name: data.name || data.fullName || 'معلم بدون اسم',
+          employeeId: data.employeeId || 'غير محدد',
+          subject: data.subject || 'العلوم العامة',
+          assignedClasses: data.assignedClasses || [],
+          evaluationsGivenCount: data.evaluationsGivenCount || 0,
+          status: data.status || 'ACTIVE'
         } as TeacherProfile);
       });
       return teachers;
@@ -157,8 +166,8 @@ export const api = {
 
       await addDoc(collection(db, 'auditLogs'), {
         action: 'ADD_TEACHER',
-        details: `أضاف القائد ${actor.name} المعلم ${teacherData.fullName}`,
-        actorName: actor.name,
+        details: `أضاف القائد ${actor?.name || 'السيستم'} المعلم ${teacherData.fullName}`,
+        actorName: actor?.name || 'القائد',
         createdAt: new Date().toISOString()
       });
 
