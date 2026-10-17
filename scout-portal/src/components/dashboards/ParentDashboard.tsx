@@ -126,7 +126,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ onOpenCertific
           {linkedScouts.map(son => (
             <button
               key={son.id}
-              onClick={() => setSelectedLinkedScoutId(son.id)}
+              onClick={() => setSelectedLinkedScoutId && setSelectedLinkedScoutId(son.id)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 selectedLinkedScout?.id === son.id
                   ? 'bg-indigo-700 text-white shadow-md'
